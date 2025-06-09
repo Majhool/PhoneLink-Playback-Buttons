@@ -33,7 +33,13 @@ jobs:
         
         # تشغيل التثبيت الصامت
         & .\install.cmd /S
-        
+
+    # هذه الخطوة ستبحث عن مكان الملف وتطبع المسار الصحيح في سجل الأخطاء
+    - name: Find AutoHotkey Compiler (Debug Step)
+      shell: pwsh
+      run: |
+        Get-ChildItem -Path "C:\" -Recurse -Filter "Ahk2Exe.exe" -ErrorAction SilentlyContinue        
+
     # الخطوة 3: تحويل السكربت. الآن Ahk2Exe موجود ومتاح في النظام
     # لا حاجة لتغيير أي شيء هنا لأن المثبت يضيف المسار الصحيح تلقائياً
     - name: Compile AHK script
