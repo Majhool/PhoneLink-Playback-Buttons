@@ -33,7 +33,7 @@ jobs:
       run: |
         Write-Output "Running the secondary installation script for the compiler..."
         # المسار المتوقع للمترجم بعد الخطوة السابقة
-        $interpreterPath = "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+        $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
         # المسار المتوقع لسكربت تثبيت المحول
         $installScriptPath = "C:\Program Files\AutoHotkey\UX\install-version.ahk"
 
