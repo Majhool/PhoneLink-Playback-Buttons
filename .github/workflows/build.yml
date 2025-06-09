@@ -38,7 +38,7 @@ jobs:
     # لا حاجة لتغيير أي شيء هنا لأن المثبت يضيف المسار الصحيح تلقائياً
     - name: Compile AHK script
       run: |
-        Ahk2Exe.exe /in "Playback.ahk" /out "Playback.exe" /icon "play_pause_icon_137298.ico"
+        & "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe" /in "Playback.ahk" /out "Playback.exe" /icon "play_pause_icon_137298.ico"
         
     # الخطوة 4: رفع الملف الناتج
     - name: Upload executable
