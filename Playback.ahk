@@ -6,40 +6,40 @@
 ; -------------------------------------------------------------------
 
 ; إزالة القائمة الافتراضية
-A_TrayMenu.Delete()
+Tray := A_TrayMenu
 
 ; إنشاء القائمة الجديدة
-MyMenu := Menu()
-MyMenu.Add("✨ رابط الاداة ✨", OpenToolLink) ; أضف النص الذي تريده في الأعلى
-MyMenu.Add("✨ رابط حسابي على Github ✨", OpenAccountLink)
-MyMenu.Add() ; خط فاصل
-MyMenu.Add("تعليق التشغيل السريع", SuspendScript)
-MyMenu.Add("إيقاف مؤقت للسكريبت", PauseScript)
-MyMenu.Add("إعادة تشغيل الاداة", ReloadScript)
-MyMenu.Add() ; خط فاصل
-MyMenu.Add("خروج", ExitScript)
+Tray.Delete()
+Tray.Add("✨ رابط الاداة ✨", OpenToolLink) ; أضف النص الذي تريده في الأعلى
+Tray.Add("✨ رابط حسابي على Github ✨", OpenAccountLink)
+Tray.Add() ; خط فاصل
+Tray.Add("تعليق التشغيل السريع", SuspendScript)
+Tray.Add("إيقاف مؤقت للاداة", PauseScript)
+Tray.Add("إعادة تشغيل الاداة", ReloadScript)
+Tray.Add() ; خط فاصل
+Tray.Add("خروج", ExitScript)
 
-OpenToolLink(ItemName, ItemPos, MyMenu){
+OpenToolLink(*){
     Run "https://github.com/Majhool/PhoneLink-Playback-Buttons"
 }
 
-OpenAccountLink(ItemName, ItemPos, MyMenu){
+OpenAccountLink(*){
     Run "https://github.com/Majhool"
 }
 
-SuspendScript(ItemName, ItemPos, MyMenu) {
+SuspendScript(*) {
     Suspend(!A_IsSuspended)
 }
 
-PauseScript(ItemName, ItemPos, MyMenu) {
+PauseScript(*) {
     Pause(!A_IsPaused)
 }
 
-ReloadScript(ItemName, ItemPos, MyMenu) {
+ReloadScript(*) {
     Reload()
 }
 
-ExitScript(ItemName, ItemPos, MyMenu) {
+ExitScript(*) {
     ExitApp()
 }
 
