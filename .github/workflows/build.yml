@@ -1,40 +1,29 @@
-name: Build AutoHotkey Script (Final Version)
+name: Interactive Debug Session
 
 on:
-  push:
-    branches: [ "main" ]
+  # يسمح لك بتشغيل هذا الـ workflow يدوياً من تبويب Actions
   workflow_dispatch:
 
 jobs:
-  build:
+  debug:
     runs-on: windows-latest
 
     steps:
-    # الخطوة 1: الحصول على الكود
+    # الخطوة 1: الحصول على الكود (تبقى كما هي)
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # الخطوة 2: تحميل وتثبيت AutoHotkey
+    # الخطوة 2: تحميل وتثبيت AutoHotkey (تبقى كما هي)
     - name: Download, Extract, and Install AutoHotkey
       shell: pwsh
       run: |
-        $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19.zip"
+        $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18.zip"
         $ahkZip = "autohotkey.zip"
         Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkZip
         Expand-Archive -Path $ahkZip -DestinationPath "ahk"
         Set-Location "ahk"
         & .\install.cmd /S
         
-    # الخطوة 3: تحويل السكربت باستخدام المسار الصحيح والمؤكد
-    - name: Compile AHK script
-      shell: pwsh
-      run: |
-        # تم استخدام المسار الذي وجدته على جهازك وهو المسار الصحيح
-        & "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe" /in "Playback.ahk" /out "Playback.exe" /icon "play_pause_icon_137298.ico"
-        
-    # الخطوة 4: رفع الملف الناتج
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: Compiled-Program
-        path: Playback.exe
+    # الخطوة 3: بدء جلسة تفاعلية للدخول اليدوي
+    - name: Start interactive debug session (via tmate)
+      uses: mxschmitt/action-tmate@v3
