@@ -18,14 +18,20 @@ jobs:
     - name: Download, Extract, and Install AutoHotkey
       shell: pwsh
       run: |
-        # تحميل الملف المضغوط
-        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile "autohotkey.zip"
+        # === الرابط المباشر الجديد من GitHub ===
+        $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19.zip"
+        $ahkZip = "autohotkey.zip"
+
+        # تحميل الملف مباشرة (سيعمل الآن بدون مشاكل)
+        Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkZip
+
         # فك الضغط في مجلد اسمه ahk
-        Expand-Archive -Path "autohotkey.zip" -DestinationPath "ahk"
-        # الدخول إلى المجلد الذي تم فك ضغطه
+        Expand-Archive -Path $ahkZip -DestinationPath "ahk"
+
+        # الدخول إلى المجلد
         Set-Location "ahk"
-        # *** تشغيل التثبيت الصامت ***
-        # هذا هو السطر الأهم. يقوم بتثبيت البرنامج دون أي نوافذ أو أسئلة
+        
+        # تشغيل التثبيت الصامت
         & .\install.cmd /S
         
     # الخطوة 3: تحويل السكربت. الآن Ahk2Exe موجود ومتاح في النظام
