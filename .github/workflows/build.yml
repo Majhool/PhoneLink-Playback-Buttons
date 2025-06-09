@@ -59,38 +59,38 @@ jobs:
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
         Write-Output "Secondary installation complete."
 
-        - name: Compile and Verify Script
-        shell: pwsh
-        run: |
-          $CompilerFolder = "C:\Program Files\AutoHotkey\Compiler"
-          $CompilerExe = "$CompilerFolder\Ahk2Exe.exe"
-          $OutputFile = "$($env:GITHUB_WORKSPACE)\Playback.exe"
-          
-          # 1. التحقق الأولي من وجود المحول
-          if (-not (Test-Path $CompilerExe)) {
-              throw "COMPILER NOT FOUND! The installation failed to create '$CompilerExe'."
-          }
-          Write-Output "Compiler found. Starting compilation..."
-  
-          # تنفيذ أمر التحويل
-          & $CompilerExe /in "$($env:GITHUB_WORKSPACE)\Playback.ahk" /out $OutputFile /icon "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
-          
-          # 2. التحقق من كود الخروج (لمنع الفشل الصامت)
-          if ($LASTEXITCODE -ne 0) {
-              throw "Ahk2Exe.exe failed with exit code $LASTEXITCODE. There was a compilation error."
-          }
-          
-          # 3. إضافة فترة انتظار (بناءً على طلبك)
-          Write-Output "Compilation command finished. Waiting 5 seconds to ensure file is written to disk..."
-          Start-Sleep -Seconds 5
-          
-          # 4. التحقق النهائي من وجود الملف الناتج
-          Write-Output "Verifying that output file '$OutputFile' exists..."
-          if (-not (Test-Path $OutputFile)) {
-              throw "VERIFICATION FAILED! The output file was not found after compilation."
-          }
-          
-          Write-Output "SUCCESS! Compiled file has been verified at '$OutputFile'."
+    - name: Compile and Verify Script
+      shell: pwsh
+      run: |
+        $CompilerFolder = "C:\Program Files\AutoHotkey\Compiler"
+        $CompilerExe = "$CompilerFolder\Ahk2Exe.exe"
+        $OutputFile = "$($env:GITHUB_WORKSPACE)\Playback.exe"
+        
+        # 1. التحقق الأولي من وجود المحول
+        if (-not (Test-Path $CompilerExe)) {
+            throw "COMPILER NOT FOUND! The installation failed to create '$CompilerExe'."
+        }
+        Write-Output "Compiler found. Starting compilation..."
+
+        # تنفيذ أمر التحويل
+        & $CompilerExe /in "$($env:GITHUB_WORKSPACE)\Playback.ahk" /out $OutputFile /icon "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
+        
+        # 2. التحقق من كود الخروج (لمنع الفشل الصامت)
+        if ($LASTEXITCODE -ne 0) {
+            throw "Ahk2Exe.exe failed with exit code $LASTEXITCODE. There was a compilation error."
+        }
+        
+        # 3. إضافة فترة انتظار (بناءً على طلبك)
+        Write-Output "Compilation command finished. Waiting 5 seconds to ensure file is written to disk..."
+        Start-Sleep -Seconds 5
+        
+        # 4. التحقق النهائي من وجود الملف الناتج
+        Write-Output "Verifying that output file '$OutputFile' exists..."
+        if (-not (Test-Path $OutputFile)) {
+            throw "VERIFICATION FAILED! The output file was not found after compilation."
+        }
+        
+        Write-Output "SUCCESS! Compiled file has been verified at '$OutputFile'."
         
     # الخطوة 5: رفع الملف التنفيذي الناتج
     - name: Upload executable
