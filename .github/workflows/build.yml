@@ -40,7 +40,7 @@ jobs:
       shell: pwsh
       run: |
         # نحدد المجلدين الأكثر احتمالاً لوجود البرنامج فيهما
-        $searchPaths = "C:\Program Files", "C:\Program Files (x86)"
+        $searchPaths = "C:\"
         Write-Output "Searching for Ahk2Exe.exe in: $searchPaths"
         
         # الأمر التالي سيبحث في المسارات المحددة ويتوقف بمجرد العثور على أول ملف مطابق
