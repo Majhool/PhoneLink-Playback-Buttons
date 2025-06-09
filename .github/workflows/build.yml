@@ -1,4 +1,4 @@
-name: Build AutoHotkey Script (Final Patched Version)
+name: Build AutoHotkey Script (with Verification Loop)
 
 on:
   push:
@@ -28,29 +28,42 @@ jobs:
       shell: pwsh
       run: |
         $installScriptPath = "C:\Program Files\AutoHotkey\UX\install-version.ahk"
-
         Write-Output "Patching '$installScriptPath' to remove the final MsgBox..."
-        
-        # نقرأ محتوى السكربت، نحذف منه سطر الرسالة، ثم نحفظه مرة أخرى
         $scriptContent = Get-Content -Path $installScriptPath -Raw
         $patchedContent = $scriptContent -replace '(?m)^\s*MsgBox\s.*$', ''
         Set-Content -Path $installScriptPath -Value $patchedContent
-
         Write-Output "Script patched successfully. Now running the installer..."
-
-        $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
+        
+        # تصحيح مسار المترجم ليكون أكثر دقة
+        $interpreterPath = "C:\Program Files\AutoHotkey\AutoHotkey.exe"
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
         Write-Output "Secondary installation complete."
 
-    - name: Wait for 5 seconds to let the system stabilize
-      shell: pwsh
-      run: Start-Sleep -Seconds 5
-       
-    # الخطوة 4: تحويل السكربت الخاص بك
-    - name: Compile User Script
+    # الخطوة 4: التحقق من وجود المحول ثم تحويل السكربت
+    - name: Verify Installation and Compile Script
       shell: pwsh
       run: |
-        & "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe" /in "$($env:GITHUB_WORKSPACE)\Playback.ahk" /out "$($env:GITHUB_WORKSPACE)\Playback.exe" /icon "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
+        $compilerFolder = "C:\Program Files\AutoHotkey\Compiler"
+        $timeoutSeconds = 60
+        $intervalSeconds = 5
+        $timer = [System.Diagnostics.Stopwatch]::StartNew()
+        
+        # === حلقة التحقق التي أضفناها ===
+        # تستمر بالتحقق طالما المجلد غير موجود والوقت لم ينتهِ
+        while (-not (Test-Path $compilerFolder)) {
+            if ($timer.Elapsed.TotalSeconds -ge $timeoutSeconds) {
+                # إذا انتهى الوقت، أفشل الـ workflow برسالة واضحة
+                throw "Timeout! Compiler folder not found at '$compilerFolder' after $timeoutSeconds seconds."
+            }
+            Write-Output "Compiler folder not found. Waiting for $intervalSeconds seconds before checking again..."
+            Start-Sleep -Seconds $intervalSeconds
+        }
+        $timer.Stop()
+        Write-Output "Success! Compiler folder found at '$compilerFolder'."
+        # ==================================
+
+        # الآن بعد أن تأكدنا من وجود كل شيء، نقوم بالتحويل
+        & "$compilerFolder\Ahk2Exe.exe" /in "$($env:GITHUB_WORKSPACE)\Playback.ahk" /out "$($env:GITHUB_WORKSPACE)\Playback.exe" /icon "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
         
     # الخطوة 5: رفع الملف التنفيذي الناتج
     - name: Upload executable
