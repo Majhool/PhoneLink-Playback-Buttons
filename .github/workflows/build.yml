@@ -1,14 +1,20 @@
-name: System State Inspection
+name: Build AutoHotkey Script (Final Version)
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  inspect:
+  build:
     runs-on: windows-latest
 
     steps:
-    # الخطوة 1: تثبيت AutoHotkey كالمعتاد
+    # الخطوة 1: الحصول على الكود
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # الخطوة 2: تحميل وتثبيت AutoHotkey
     - name: Install AutoHotkey
       shell: pwsh
       run: |
@@ -19,17 +25,20 @@ jobs:
         Set-Location "ahk"
         & .\install.cmd /S
         
-    # الخطوة 2: طباعة معلومات النظام بعد التثبيت
-    - name: List Installed Files and Environment
+    # الخطوة 3: تحويل السكربت (بالطريقة المضمونة)
+    - name: Compile AHK script
       shell: pwsh
       run: |
-        Write-Output "=================================================="
-        Write-Output "LISTING ENVIRONMENT VARIABLES (looking for PATH changes)"
-        Write-Output "=================================================="
-        Get-ChildItem Env:
-
-        Write-Output "=================================================="
-        Write-Output "LISTING CONTENTS OF PROGRAM FILES (up to 3 levels deep)"
-        Write-Output "=================================================="
-        # سنقوم بعرض محتويات مجلدات البرامج لعمق 3 مستويات
-        Get-ChildItem -Path "C:\Program Files", "C:\Program Files (x86)" -Depth 3 -ErrorAction SilentlyContinue
+        # أولاً: ننتقل إلى مجلد المحول مباشرةً
+        Set-Location "C:\Program Files\AutoHotkey\Compiler"
+        
+        # ثانياً: ننفذ الأمر من داخل المجلد
+        # نستخدم GITHUB_WORKSPACE لنضمن أن مسارات ملفاتك صحيحة
+        & .\Ahk2Exe.exe /in "$($env:GITHUB_WORKSPACE)\Playback.ahk" /out "$($env:GITHUB_WORKSPACE)\Playback.exe" /icon "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
+        
+    # الخطوة 4: رفع الملف الناتج
+    - name: Upload executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: Compiled-Program
+        path: Playback.exe
