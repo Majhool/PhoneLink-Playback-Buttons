@@ -1,29 +1,35 @@
-name: Interactive Debug Session
+name: System State Inspection
 
 on:
-  # يسمح لك بتشغيل هذا الـ workflow يدوياً من تبويب Actions
   workflow_dispatch:
 
 jobs:
-  debug:
+  inspect:
     runs-on: windows-latest
 
     steps:
-    # الخطوة 1: الحصول على الكود (تبقى كما هي)
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    # الخطوة 2: تحميل وتثبيت AutoHotkey (تبقى كما هي)
-    - name: Download, Extract, and Install AutoHotkey
+    # الخطوة 1: تثبيت AutoHotkey كالمعتاد
+    - name: Install AutoHotkey
       shell: pwsh
       run: |
-        $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18.zip"
+        $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19.zip"
         $ahkZip = "autohotkey.zip"
         Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkZip
         Expand-Archive -Path $ahkZip -DestinationPath "ahk"
         Set-Location "ahk"
         & .\install.cmd /S
         
-    # الخطوة 3: بدء جلسة تفاعلية للدخول اليدوي
-    - name: Start interactive debug session (via tmate)
-      uses: mxschmitt/action-tmate@v3
+    # الخطوة 2: طباعة معلومات النظام بعد التثبيت
+    - name: List Installed Files and Environment
+      shell: pwsh
+      run: |
+        Write-Output "=================================================="
+        Write-Output "LISTING ENVIRONMENT VARIABLES (looking for PATH changes)"
+        Write-Output "=================================================="
+        Get-ChildItem Env:
+
+        Write-Output "=================================================="
+        Write-Output "LISTING CONTENTS OF PROGRAM FILES (up to 3 levels deep)"
+        Write-Output "=================================================="
+        # سنقوم بعرض محتويات مجلدات البرامج لعمق 3 مستويات
+        Get-ChildItem -Path "C:\Program Files", "C:\Program Files (x86)" -Depth 3 -ErrorAction SilentlyContinue
