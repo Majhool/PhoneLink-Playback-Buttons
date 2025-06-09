@@ -1,16 +1,12 @@
-name: Build AutoHotkey Script
+name: Build AHK Script (Manual Install)
 
-# هذا القسم يحدد متى يتم تشغيل الأكشن
-# هنا، سيتم تشغيلها عند كل عملية push للفرع main
 on:
   push:
     branches: [ "main" ]
-  # يمكنك أيضاً تشغيلها يدوياً من واجهة GitHub
   workflow_dispatch:
 
 jobs:
   build:
-    # يجب تحديد نظام التشغيل ويندوز
     runs-on: windows-latest
 
     steps:
@@ -18,22 +14,27 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # الخطوة 2: تثبيت AutoHotkey (هنا نستخدم v2) وأداة التحويل
-    - name: Setup AutoHotkey
-      uses: hotkey-actions/setup-ahk@v2
-      with:
-        # حدد النسخة التي تستخدمها v1 أو v2. مهم جداً!
-        version: 'v2'
-
-    # الخطوة 3: تحويل السكربت باستخدام أداة Ahk2Exe
-    # غيّر "Playback.ahk" و "Playback.exe" لتطابق أسماء ملفاتك
+    # الخطوة 2: تحميل، فك ضغط، وتثبيت AutoHotkey v2 بشكل صامت
+    - name: Download, Extract, and Install AutoHotkey
+      shell: pwsh
+      run: |
+        # تحميل الملف المضغوط
+        Invoke-WebRequest -Uri "https://www.autohotkey.com/download/ahk-v2.zip" -OutFile "autohotkey.zip"
+        # فك الضغط في مجلد اسمه ahk
+        Expand-Archive -Path "autohotkey.zip" -DestinationPath "ahk"
+        # الدخول إلى المجلد الذي تم فك ضغطه
+        Set-Location "ahk"
+        # *** تشغيل التثبيت الصامت ***
+        # هذا هو السطر الأهم. يقوم بتثبيت البرنامج دون أي نوافذ أو أسئلة
+        & .\install.cmd /S
+        
+    # الخطوة 3: تحويل السكربت. الآن Ahk2Exe موجود ومتاح في النظام
+    # لا حاجة لتغيير أي شيء هنا لأن المثبت يضيف المسار الصحيح تلقائياً
     - name: Compile AHK script
       run: |
         Ahk2Exe.exe /in "Playback.ahk" /out "Playback.exe" /icon "play_pause_icon_137298.ico"
-      # ملاحظة: أمر /icon اختياري، يمكنك إزالته إذا لم يكن لديك أيقونة
-
-    # الخطوة 4: رفع الملف الناتج كـ artifact ليسهل تحميله
-    # يمكنك تحميل الملف من صفحة الأكشن بعد انتهاء التنفيذ
+        
+    # الخطوة 4: رفع الملف الناتج
     - name: Upload executable
       uses: actions/upload-artifact@v4
       with:
