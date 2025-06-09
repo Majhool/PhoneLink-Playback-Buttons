@@ -1,4 +1,4 @@
-name: Build AHK Script (Manual Install)
+name: Build AutoHotkey Script (Final Version)
 
 on:
   push:
@@ -10,46 +10,26 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # الخطوة 1: الحصول على كود المستودع
+    # الخطوة 1: الحصول على الكود
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # الخطوة 2: تحميل، فك ضغط، وتثبيت AutoHotkey v2 بشكل صامت
+    # الخطوة 2: تحميل وتثبيت AutoHotkey
     - name: Download, Extract, and Install AutoHotkey
       shell: pwsh
       run: |
-        # === الرابط المباشر الجديد من GitHub ===
         $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19.zip"
         $ahkZip = "autohotkey.zip"
-
-        # تحميل الملف مباشرة (سيعمل الآن بدون مشاكل)
         Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkZip
-
-        # فك الضغط في مجلد اسمه ahk
         Expand-Archive -Path $ahkZip -DestinationPath "ahk"
-
-        # الدخول إلى المجلد
         Set-Location "ahk"
-        
-        # تشغيل التثبيت الصامت
         & .\install.cmd /S
-
-    # === خطوة اختبار محسنة وسريعة ===
-    # تبحث فقط في المجلدات المحتملة وتتوقف عند أول نتيجة
-    - name: Find AutoHotkey Compiler (Optimized Search)
+        
+    # الخطوة 3: تحويل السكربت باستخدام المسار الصحيح والمؤكد
+    - name: Compile AHK script
       shell: pwsh
       run: |
-        # نحدد المجلدين الأكثر احتمالاً لوجود البرنامج فيهما
-        $searchPaths = "C:\"
-        Write-Output "Searching for Ahk2Exe.exe in: $searchPaths"
-        
-        # الأمر التالي سيبحث في المسارات المحددة ويتوقف بمجرد العثور على أول ملف مطابق
-        Get-ChildItem -Path $searchPaths -Recurse -Filter "Ahk2Exe.exe" -ErrorAction SilentlyContinue | Select-Object -First 1      
-
-    # الخطوة 3: تحويل السكربت. الآن Ahk2Exe موجود ومتاح في النظام
-    # لا حاجة لتغيير أي شيء هنا لأن المثبت يضيف المسار الصحيح تلقائياً
-    - name: Compile AHK script
-      run: |
+        # تم استخدام المسار الذي وجدته على جهازك وهو المسار الصحيح
         & "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe" /in "Playback.ahk" /out "Playback.exe" /icon "play_pause_icon_137298.ico"
         
     # الخطوة 4: رفع الملف الناتج
