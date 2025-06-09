@@ -1,0 +1,41 @@
+name: Build AutoHotkey Script
+
+# هذا القسم يحدد متى يتم تشغيل الأكشن
+# هنا، سيتم تشغيلها عند كل عملية push للفرع main
+on:
+  push:
+    branches: [ "main" ]
+  # يمكنك أيضاً تشغيلها يدوياً من واجهة GitHub
+  workflow_dispatch:
+
+jobs:
+  build:
+    # يجب تحديد نظام التشغيل ويندوز
+    runs-on: windows-latest
+
+    steps:
+    # الخطوة 1: الحصول على كود المستودع
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # الخطوة 2: تثبيت AutoHotkey (هنا نستخدم v2) وأداة التحويل
+    - name: Setup AutoHotkey
+      uses: hotkey-actions/setup-ahk@v2
+      with:
+        # حدد النسخة التي تستخدمها v1 أو v2. مهم جداً!
+        version: 'v2'
+
+    # الخطوة 3: تحويل السكربت باستخدام أداة Ahk2Exe
+    # غيّر "Playback.ahk" و "Playback.exe" لتطابق أسماء ملفاتك
+    - name: Compile AHK script
+      run: |
+        Ahk2Exe.exe /in "Playback.ahk" /out "Playback.exe" /icon "play_pause_icon_137298.ico"
+      # ملاحظة: أمر /icon اختياري، يمكنك إزالته إذا لم يكن لديك أيقونة
+
+    # الخطوة 4: رفع الملف الناتج كـ artifact ليسهل تحميله
+    # يمكنك تحميل الملف من صفحة الأكشن بعد انتهاء التنفيذ
+    - name: Upload executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: Compiled-Program
+        path: Playback.exe
