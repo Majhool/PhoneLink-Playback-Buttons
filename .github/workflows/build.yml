@@ -28,14 +28,34 @@ jobs:
       shell: pwsh
       run: |
         $installScriptPath = "C:\Program Files\AutoHotkey\UX\install-version.ahk"
-        Write-Output "Patching '$installScriptPath' to remove the final MsgBox..."
-        $scriptContent = Get-Content -Path $installScriptPath -Raw
-        $patchedContent = $scriptContent -replace '(?m)^\s*MsgBox\s.*$', ''
-        Set-Content -Path $installScriptPath -Value $patchedContent
-        Write-Output "Script patched successfully. Now running the installer..."
+
+        Write-Output "Patching '$installScriptPath' to remove ONLY the final MsgBox..."
         
-        # تصحيح مسار المترجم ليكون أكثر دقة
-        $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
+        # === الكود الجديد لتحديد وحذف السطر الأخير فقط ===
+        # نقرأ الملف كمصفوفة من السطور
+        $lines = Get-Content -Path $installScriptPath
+        
+        # نبحث عن رقم السطر الأخير الذي يحتوي على كلمة MsgBox
+        $lastMatchIndex = -1
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -like '*MsgBox*') {
+                $lastMatchIndex = $i
+            }
+        }
+        
+        # إذا وجدنا سطراً مطابقاً، نقوم بحذفه (عبر جعله فارغاً)
+        if ($lastMatchIndex -ne -1) {
+            Write-Output "Found MsgBox on line $($lastMatchIndex + 1). Removing it."
+            $lines[$lastMatchIndex] = ""
+        }
+        
+        # نحفظ الملف مرة أخرى بعد إزالة السطر
+        Set-Content -Path $installScriptPath -Value $lines
+        # =======================================================
+
+        Write-Output "Script patched successfully. Now running the installer..."
+
+        $interpreterPath = "C:\Program Files\AutoHotkey\AutoHotkey.exe"
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
         Write-Output "Secondary installation complete."
 
