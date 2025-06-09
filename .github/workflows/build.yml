@@ -42,6 +42,10 @@ jobs:
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
         Write-Output "Secondary installation complete."
 
+    - name: Wait for 5 seconds to let the system stabilize
+      shell: pwsh
+      run: Start-Sleep -Seconds 5
+       
     # الخطوة 4: تحويل السكربت الخاص بك
     - name: Compile User Script
       shell: pwsh
