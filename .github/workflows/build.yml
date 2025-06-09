@@ -1,4 +1,4 @@
-name: Build AutoHotkey Script (User's Final Method)
+name: Build AutoHotkey Script (Final Patched Version)
 
 on:
   push:
@@ -10,45 +10,42 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # الخطوة 1: الحصول على كود السكربت الخاص بك
+    # الخطوة 1: الحصول على الكود
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # الخطوة 2: تثبيت نواة AutoHotkey (حسب تعليماتك)
+    # الخطوة 2: تثبيت نواة AutoHotkey
     - name: Install AutoHotkey Core
       shell: pwsh
       run: |
-        Write-Output "Downloading the AutoHotkey setup executable..."
         $setupUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19_setup.exe"
         $setupFile = "AutoHotkey_setup.exe"
         Invoke-WebRequest -Uri $setupUrl -OutFile $setupFile
-        
-        Write-Output "Running silent/elevated installation..."
-        # نستخدم Start-Process مع -Wait لنضمن انتهاء التثبيت بالكامل قبل الانتقال للخطوة التالية
         Start-Process -FilePath $setupFile -ArgumentList "/silent /elevate" -Wait
 
-    # الخطوة 3: تثبيت المحول Ahk2Exe (حسب تعليماتك)
-    - name: Install Compiler (Ahk2Exe)
+    # الخطوة 3: تثبيت المحول Ahk2Exe (مع تعديل السكربت ليصبح صامتاً)
+    - name: Install Compiler (and Patch Script)
       shell: pwsh
       run: |
-        Write-Output "Running the secondary installation script for the compiler..."
-        # المسار المتوقع للمترجم بعد الخطوة السابقة
-        $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
-        # المسار المتوقع لسكربت تثبيت المحول
         $installScriptPath = "C:\Program Files\AutoHotkey\UX\install-version.ahk"
 
-        # نتأكد من وجود الملفات قبل تشغيلها
-        if (-not (Test-Path $interpreterPath)) { throw "AutoHotkey.exe not found at $interpreterPath" }
-        if (-not (Test-Path $installScriptPath)) { throw "install-version.ahk not found at $installScriptPath" }
+        Write-Output "Patching '$installScriptPath' to remove the final MsgBox..."
+        
+        # نقرأ محتوى السكربت، نحذف منه سطر الرسالة، ثم نحفظه مرة أخرى
+        $scriptContent = Get-Content -Path $installScriptPath -Raw
+        $patchedContent = $scriptContent -replace '(?m)^\s*MsgBox\s.*$', ''
+        Set-Content -Path $installScriptPath -Value $patchedContent
 
-        # نقوم بتشغيل السكربت وننتظر انتهاءه
+        Write-Output "Script patched successfully. Now running the installer..."
+
+        $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
+        Write-Output "Secondary installation complete."
 
-    # الخطوة 4: تحويل السكربت الخاص بك (الآن يجب أن يكون كل شيء جاهزاً)
+    # الخطوة 4: تحويل السكربت الخاص بك
     - name: Compile User Script
       shell: pwsh
       run: |
-        Write-Output "Compiling the final script..."
         & "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe" /in "$($env:GITHUB_WORKSPACE)\Playback.ahk" /out "$($env:GITHUB_WORKSPACE)\Playback.exe" /icon "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
         
     # الخطوة 5: رفع الملف التنفيذي الناتج
