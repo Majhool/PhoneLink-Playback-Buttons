@@ -11,6 +11,7 @@ A_TrayMenu.Delete()
 ; إنشاء القائمة الجديدة
 MyMenu := Menu()
 MyMenu.Add("✨ رابط الاداة ✨", OpenToolLink) ; أضف النص الذي تريده في الأعلى
+MyMenu.Add("✨ رابط حسابي على Github ✨", OpenAccountLink)
 MyMenu.Add() ; خط فاصل
 MyMenu.Add("تعليق التشغيل السريع", SuspendScript)
 MyMenu.Add("إيقاف مؤقت للسكريبت", PauseScript)
@@ -19,7 +20,11 @@ MyMenu.Add() ; خط فاصل
 MyMenu.Add("خروج", ExitScript)
 
 OpenToolLink(ItemName, ItemPos, MyMenu){
-    Run ""
+    Run "https://github.com/Majhool/PhoneLink-Playback-Buttons"
+}
+
+OpenAccountLink(ItemName, ItemPos, MyMenu){
+    Run "https://github.com/Majhool"
 }
 
 SuspendScript(ItemName, ItemPos, MyMenu) {
