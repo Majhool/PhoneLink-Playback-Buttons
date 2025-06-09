@@ -55,7 +55,7 @@ jobs:
 
         Write-Output "Script patched successfully. Now running the installer..."
 
-        $interpreterPath = "C:\Program Files\AutoHotkey\AutoHotkey.exe"
+        $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
         Write-Output "Secondary installation complete."
 
