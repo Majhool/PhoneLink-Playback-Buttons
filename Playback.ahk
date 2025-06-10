@@ -6,6 +6,7 @@
 ; -------------------------------------------------------------------
 ; هذا السطر يقوم بتشغيل سكربت PowerShell في الخلفية لإصلاح مشكلة قارئ الشاشة
 ; يتم هذا تلقائيًا عند بدء تشغيل الأداة
+FileInstall("SolvePowerShell.ps1", A_Temp . "\SolvePowerShell.ps1", true)
 Run('powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "' A_ScriptDir '\SolvePowerShell.ps1"')
 
 

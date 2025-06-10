@@ -51,7 +51,7 @@ jobs:
         uses: softprops/action-gh-release@v2.0.6 
         with:
           tag_name: Second-Build
-          name: "اصلاح مشكلة ‏Powershell"
+          name: "\u200Fاصلاح مشكلة Powershell"
           # --- تم تعديل هذا الجزء لدعم اللغة العربية ---
           body: |
             <div dir="rtl">
