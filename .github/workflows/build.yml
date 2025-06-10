@@ -74,6 +74,7 @@ jobs:
           echo "Running command: $command"
           # تنفيذ الأمر
           Invoke-Expression $command
+          Start-Sleep -Seconds 3
 
       # الخطوة 4: رفع الملف التنفيذي الناتج كـ Artifact
       - name: Upload compiled executable
