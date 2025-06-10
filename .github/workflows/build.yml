@@ -1,4 +1,4 @@
-name: Build AHK Executable (FINAL FIX)
+name: Build AHK Executable (File-Based Method)
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: STEP 2 - COMPILE THE SCRIPT
-        id: compile
         uses: ./.github/actions/ahk-compiler
         with:
           script_file: 'Playback.ahk'
@@ -22,23 +21,26 @@ jobs:
           icon_file: 'play_pause_icon_137298.ico'
           architecture: 'x64'
 
-      - name: STEP 3 - VERIFY THE COMPILED FILE PATH
+      - name: STEP 3 - READ AND VERIFY THE COMPILED FILE PATH
+        id: get_path
         shell: pwsh
         run: |
-          $exePath = "${{ steps.compile.outputs.exe_path }}"
-          Write-Host "Path received from compile step: '$exePath'"
-          if (-not $exePath) {
-            Write-Error "FATAL: The 'exe_path' output from the compile step is still empty."
+          if (-not (Test-Path "exe_path.txt")) {
+            Write-Error "FATAL: The file 'exe_path.txt' was not created by the compile action."
             exit 1
           }
+          $exePath = Get-Content -Path "exe_path.txt"
+          Write-Host "Path read from file: '$exePath'"
           if (-not (Test-Path $exePath)) {
-            Write-Error "FATAL: File does not exist at the specified path: '$exePath'"
+            Write-Error "FATAL: The file specified in exe_path.txt does not exist at: '$exePath'"
             exit 1
           }
-          Write-Host "✅ Verification successful. File found at: $exePath"
+          Write-Host "✅ Verification successful. File found."
+          # Set the path as an output of THIS step
+          echo "path=$exePath" >> $env:GITHUB_OUTPUT
 
       - name: STEP 4 - UPLOAD THE FINAL ARTIFACT
         uses: actions/upload-artifact@v4
         with:
           name: Playback-App-Final
-          path: ${{ steps.compile.outputs.exe_path }}
+          path: ${{ steps.get_path.outputs.path }}
