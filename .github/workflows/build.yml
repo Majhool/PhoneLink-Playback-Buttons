@@ -48,12 +48,15 @@ jobs:
 
       - name: STEP 5 - CREATE GITHUB RELEASE
         # --- تم تحديث هذا السطر ---
-        uses: softprops/action-gh-release@v2.0.6 
+        uses: softprops/action-gh-release@v2.3.0 
         with:
           tag_name: build-${{ github.run_number }}
-          name: "First Release 🎉"
+          name: "اول اصدار 🎉"
           body: |
-            This is an automated development build triggered by a push to the main branch.
+            اول اصدار للاداة التي تمكنك من التحكم بالAudio Player في تطبيق PhoneLink
+            ملاحظة مهمة: الازرار المستخدمة هي ازرار مبرمجة من الكيبورد مصنعيا للتحكم بالمحتوى
+            اذا كنت تستخدم ازرار مثل F5 والزر لا يحتوي على fn+F5 
+            فيجب عليك تعديل سكربت Playback.ahk وتحديدا الازرار التي بالاسفل
           # وضع علامة "pre-release" على الإصدارات الآلية فكرة جيدة
           prerelease: false 
           files: ${{ steps.get_path.outputs.path }}
