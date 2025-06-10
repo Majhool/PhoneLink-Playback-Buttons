@@ -50,7 +50,7 @@ jobs:
         # --- تم تحديث هذا السطر ---
         uses: softprops/action-gh-release@v2.3.0 
         with:
-          tag_name: build-${{ github.run_number }}
+          tag_name: First-Build
           name: "اول اصدار 🎉"
           body: |
             اول اصدار للاداة التي تمكنك من التحكم بالAudio Player في تطبيق PhoneLink
