@@ -67,13 +67,13 @@ jobs:
             <br>
             <br>
             <p>
-            هذا الاصدار يصلح مشكلة الPowershell التالية
+            هذا الاصدار يصلح مشكلة الPowershell التالية بالاضافة الى عدم اظهار نافذة Powershell عند تنفيذ سكربت الPowershell
             </p>
             <p dir="ltr">
             Warning: PowerShell detected that you might be using a screen reader and has disabled PSReadLine for compatibility purposes. If you want to re-enable it, run 'Import-Module PSReadLine'.
             </p>
             <p>
-            السكربت من موقع <a href="https://serverfault.com/a/1015682">https://serverfault.com/a/1015682</a>
+            سكربت الPowershell من موقع <a href="https://serverfault.com/a/1015682">https://serverfault.com/a/1015682</a>
             </p>
             </div>
           # وضع علامة "pre-release" على الإصدارات الآلية فكرة جيدة
