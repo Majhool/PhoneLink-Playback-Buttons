@@ -81,53 +81,62 @@ runs:
     - name: Compile AHK Script
       shell: pwsh
       run: |
+        # --- التحقق من وجود ملفات الإدخال أولاً ---
+        Write-Host "Verifying input files exist..."
+        if (-not (Test-Path "${{ inputs.script_file }}")) {
+            Write-Error "Input script not found at: ${{ inputs.script_file }}"
+            exit 1
+        }
+        if ('${{ inputs.icon_file }}' -and (-not (Test-Path "${{ inputs.icon_file }}"))) {
+            Write-Error "Input icon not found at: ${{ inputs.icon_file }}"
+            exit 1
+        }
+        Write-Host "✅ All input files found."
+
+        # --- إنشاء مجلد الخرج ---
         $outputDirectory = Split-Path -Path "${{ inputs.output_file }}" -Parent
         if ($outputDirectory) {
-          Write-Host "Ensuring output directory '$outputDirectory' exists..."
           New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
         }
-        
+
+        # --- تحويل كل المسارات إلى مسارات مطلقة لإزالة أي التباس ---
+        Write-Host "Converting all paths to absolute paths..."
+        $scriptAbs = (Resolve-Path -Path "${{ inputs.script_file }}").Path
+        $outputAbs = (Resolve-Path -Path "${{ inputs.output_file }}" -ErrorAction SilentlyContinue).Path
+        if (-not $outputAbs) {
+            $outputAbs = Join-Path -Path (Get-Location).Path -ChildPath "${{ inputs.output_file }}"
+        }
+        $iconAbs = ""
+        if ('${{ inputs.icon_file }}') {
+            $iconAbs = (Resolve-Path -Path "${{ inputs.icon_file }}").Path
+        }
+
         $ahkDir = "${{ steps.paths.outputs.ahk_dir }}"
         $compilerExe = Join-Path $ahkDir "Compiler\Ahk2Exe.exe"
-
         if ('${{ inputs.architecture }}' -eq 'x86') {
           $baseFile = Join-Path $ahkDir "v2\AutoHotkey32.exe"
         } else {
           $baseFile = Join-Path $ahkDir "v2\AutoHotkey64.exe"
         }
 
-        $compileArgs = @("/in", "`"${{ inputs.script_file }}`"", "/out", "`"${{ inputs.output_file }}`"", "/base", "`"$baseFile`"")
-
-        if ('${{ inputs.icon_file }}') {
-            if (Test-Path "${{ inputs.icon_file }}") {
-                $compileArgs += "/icon", "`"${{ inputs.icon_file }}`""
-            } else {
-                Write-Warning "Icon file not found at '${{ inputs.icon_file }}'. Compiling without icon."
-            }
+        # --- بناء وسائط الأمر باستخدام المسارات المطلقة ---
+        $compileArgs = @("/in", "`"$scriptAbs`"", "/out", "`"$outputAbs`"", "/base", "`"$baseFile`"")
+        if ($iconAbs) {
+            $compileArgs += "/icon", "`"$iconAbs`""
         }
         
-        # --- 🚀 الجزء الأهم للتشخيص 🚀 ---
-        Write-Host "--- Attempting to compile with command: ---"
+        # --- التنفيذ النهائي ---
+        Write-Host "--- Attempting to compile with ABSOLUTE paths: ---"
         Write-Host "$compilerExe $($compileArgs -join ' ')"
-        Write-Host "-------------------------------------------"
-        
-        # تنفيذ الأمر مع إظهار أي أخطاء (stderr)
+        Write-Host "-------------------------------------------------"
         & $compilerExe $compileArgs *>&1 | Write-Host
         
-        Write-Host "--- Compilation command finished. ---"
-        Write-Host "--- Checking contents of output directory: '$outputDirectory' ---"
-        if (Test-Path $outputDirectory) {
-            ls $outputDirectory
-        } else {
-            Write-Warning "Output directory was not created."
-        }
-        Write-Host "-------------------------------------------"
-
+        # --- التحقق النهائي ---
         if (-not (Test-Path "${{ inputs.output_file }}")) {
-            Write-Error "COMPILATION FAILED: Final output file was not found."
+            Write-Error "COMPILATION FAILED: Final output file was not created. Check for errors in the script or its #include files."
             exit 1
         }
-        Write-Host "✅ Compilation successful. Output file created."
+        Write-Host "✅ Compilation successful."
 
     - name: Set Action Output
       id: set_output
