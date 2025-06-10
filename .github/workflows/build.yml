@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/ahk-compiler # المسار إلى ملف action.yml
         with:
           script_file: 'Playback.ahk'
-          output_file: 'Playback.exe'
+          output_file: 'release/Playback.exe'
           icon_file: 'play_pause_icon_137298.ico' # قم بإزالة التعليق إذا كان لديك ملف أيقونة
           architecture: 'x64' # يمكن أن تكون 'x86' أو 'x64'
 
