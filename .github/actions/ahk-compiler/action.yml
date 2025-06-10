@@ -55,12 +55,12 @@ runs:
         $ahkDir = "${{ steps.paths.outputs.ahk_dir }}"
         $ahkExe = Join-Path $ahkDir "v2\AutoHotkey64.exe"
         $compilerInstallerScript = Join-Path $ahkDir "UX\install-ahk2exe.ahk"
-        
+
         Write-Host "Running compiler installer: $compilerInstallerScript"
         Write-Host "Passing '/Y' to bypass the confirmation dialog (based on 'if !A_Args.Length')."
-        
+
         & $ahkExe $compilerInstallerScript /Y
-        
+
         # Wait for download and extraction to finish
         Start-Sleep -Seconds 8
 
@@ -79,9 +79,10 @@ runs:
         Write-Host "Ahk2Exe.exe successfully installed."
 
     - name: Compile AHK Script
+      id: compile_script # It's good practice to give this step an ID too
       shell: pwsh
       run: |
-        # --- التحقق من وجود ملفات الإدخال ---
+        # --- Verify input files ---
         Write-Host "Verifying input files exist..."
         if (-not (Test-Path "${{ inputs.script_file }}")) {
             Write-Error "Input script not found at: ${{ inputs.script_file }}"
@@ -93,13 +94,13 @@ runs:
         }
         Write-Host "✅ All input files found."
 
-        # --- إنشاء مجلد الخرج ---
+        # --- Create output directory ---
         $outputDirectory = Split-Path -Path "${{ inputs.output_file }}" -Parent
         if ($outputDirectory) {
           New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
         }
 
-        # --- تحويل المسارات إلى مطلقة ---
+        # --- Resolve to absolute paths ---
         $scriptAbs = (Resolve-Path -Path "${{ inputs.script_file }}").Path
         $outputAbs = (Resolve-Path -Path "${{ inputs.output_file }}" -ErrorAction SilentlyContinue).Path
         if (-not $outputAbs) {
@@ -110,7 +111,7 @@ runs:
             $iconAbs = (Resolve-Path -Path "${{ inputs.icon_file }}").Path
         }
 
-        # --- إعدادات المُجمّع ---
+        # --- Compiler settings ---
         $ahkDir = "${{ steps.paths.outputs.ahk_dir }}"
         $compilerExe = Join-Path $ahkDir "Compiler\Ahk2Exe.exe"
         if ('${{ inputs.architecture }}' -eq 'x86') {
@@ -119,18 +120,18 @@ runs:
           $baseFile = Join-Path $ahkDir "v2\AutoHotkey64.exe"
         }
 
-        # --- ✅ بناء وسائط الأمر بالطريقة الصحيحة (بدون علامات الاقتباس الإضافية) ---
+        # --- Build the command arguments correctly ---
         $compileArgs = @("/silent", "/in", $scriptAbs, "/out", $outputAbs, "/base", $baseFile)
         if ($iconAbs) {
             $compileArgs += "/icon", $iconAbs
         }
         
-        # --- التنفيذ ---
+        # --- Execute ---
         Write-Host "--- Attempting to compile with command: ---"
         Write-Host "$compilerExe $($compileArgs -join ' ')"
         & $compilerExe $compileArgs *>&1 | Write-Host
         
-        # --- التحقق النهائي ---
+        # --- Final check ---
         if (-not (Test-Path "${{ inputs.output_file }}")) {
             Write-Error "COMPILATION FAILED: Final output file was not created. Check for errors in the script itself."
             exit 1
