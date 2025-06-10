@@ -44,3 +44,14 @@ jobs:
         with:
           name: Playback-App-Final
           path: ${{ steps.get_path.outputs.path }}
+
+      - name: STEP 5 - CREATE GITHUB RELEASE
+        # هذه الخطوة تعمل فقط عند إنشاء Tag جديد
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+            files: ${{ steps.get_path.outputs.path }}
+            name: "Playback App ${{ github.ref_name }}"
+            body: |
+                Official release for version ${{ github.ref_name }}.
+                 تم إنشاء هذا الإصدار تلقائيًا.      
