@@ -2,7 +2,15 @@
 #include "UIA.ahk"
 
 ; -------------------------------------------------------------------
-; |                      القائمة المخصصة بالعربية                    |
+; |                      تشغيل سكربت الإصلاح الأولي                   |
+; -------------------------------------------------------------------
+; هذا السطر يقوم بتشغيل سكربت PowerShell في الخلفية لإصلاح مشكلة قارئ الشاشة
+; يتم هذا تلقائيًا عند بدء تشغيل الأداة
+Run('powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File "' A_ScriptDir '\SolvePowerShell.ps1"')
+
+
+; -------------------------------------------------------------------
+; |                      القائمة المخصصة بالعربية                    |
 ; -------------------------------------------------------------------
 
 ; إزالة القائمة الافتراضية
@@ -19,11 +27,11 @@ Tray.Add("إعادة تشغيل الاداة", ReloadScript)
 Tray.Add() ; خط فاصل
 Tray.Add("خروج", ExitScript)
 
-OpenToolLink(*){
+OpenToolLink(*) {
     Run "https://github.com/Majhool/PhoneLink-Playback-Buttons"
 }
 
-OpenAccountLink(*){
+OpenAccountLink(*) {
     Run "https://github.com/Majhool"
 }
 
@@ -45,7 +53,7 @@ ExitScript(*) {
 
 
 ; -------------------------------------------------------------------
-; |                  الكود الأساسي للتحكم في Phone Link             |
+; |                  الكود الأساسي للتحكم في Phone Link             |
 ; -------------------------------------------------------------------
 HandlePhoneLinkButton(identifier, isAutomationId := false) {
     hwnd := WinExist("ahk_exe PhoneExperienceHost.exe")
@@ -57,16 +65,16 @@ HandlePhoneLinkButton(identifier, isAutomationId := false) {
     if !root
         return
 
-    condition := isAutomationId ? {AutomationId: identifier} : {Name: identifier}
+    condition := isAutomationId ? { AutomationId: identifier } : { Name: identifier }
     btn := root.FindElement(condition)
     if btn
         if btn.LegacyIAccessiblePattern
-    	    btn.LegacyIAccessiblePattern.DoDefaultAction()
-	else
-    	    btn.Invoke() ; fallback إذا ما كان في LegacyIAccessible
+            btn.LegacyIAccessiblePattern.DoDefaultAction()
+        else
+            btn.Invoke() ; fallback إذا ما كان في LegacyIAccessible
 
 }
 
-Media_Play_Pause::HandlePhoneLinkButton("PlayPauseButton", true)
-Media_Next::HandlePhoneLinkButton("Next")
-Media_Prev::HandlePhoneLinkButton("Previous")
+Media_Play_Pause:: HandlePhoneLinkButton("PlayPauseButton", true)
+Media_Next:: HandlePhoneLinkButton("Next")
+Media_Prev:: HandlePhoneLinkButton("Previous")
