@@ -1,4 +1,4 @@
-name: Build AHK Executable
+name: Build AHK Executable (FINAL VERSION)
 
 on:
   push:
@@ -6,24 +6,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-exe:
+  build-the-exe:
     runs-on: windows-latest
 
     steps:
-      - name: 1. Checkout Repository Code
+      - name: STEP 1 - CHECKOUT THE CODE
         uses: actions/checkout@v4
 
-      - name: 2. Compile AHK Script
-        id: compile  #  هذا المعرّف مهم للخطوة التالية
+      - name: STEP 2 - COMPILE THE SCRIPT
+        id: compile
         uses: ./.github/actions/ahk-compiler
         with:
           script_file: 'Playback.ahk'
-          output_file: 'release\Playback.exe'
+          output_file: 'release/Playback.exe'
           icon_file: 'play_pause_icon_137298.ico'
           architecture: 'x64'
 
-      - name: 3. Upload Compiled Executable
+      - name: STEP 3 - UPLOAD THE FINAL ARTIFACT
         uses: actions/upload-artifact@v4
         with:
-          name: Playback-App
-          path: ${{ steps.compile.outputs.exe_path }} # هنا يقرأ المسار من الخطوة السابقة
+          name: Playback-App-Final
+          path: ${{ steps.compile.outputs.exe_path }}
