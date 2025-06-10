@@ -46,7 +46,7 @@ jobs:
           path: ${{ steps.get_path.outputs.path }}
 
       - name: STEP 5 - CREATE GITHUB RELEASE
-        # هذه الخطوة تعمل فقط عند إنشاء Tag جديد
+        
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
