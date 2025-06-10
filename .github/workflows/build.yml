@@ -18,7 +18,7 @@ jobs:
         uses: ./.github/actions/ahk-compiler
         with:
           script_file: 'Playback.ahk'
-          output_file: 'release/Playback.exe'
+          output_file: 'release\Playback.exe'
           icon_file: 'play_pause_icon_137298.ico'
           architecture: 'x64'
 
