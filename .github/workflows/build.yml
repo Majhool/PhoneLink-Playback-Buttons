@@ -73,7 +73,7 @@ jobs:
             Warning: PowerShell detected that you might be using a screen reader and has disabled PSReadLine for compatibility purposes. If you want to re-enable it, run 'Import-Module PSReadLine'.
             </p>
             <p>
-            السكربت من موقع https://serverfault.com/a/1015682
+            السكربت من موقع <a href="https://serverfault.com/a/1015682">https://serverfault.com/a/1015682</a>
             </p>
             </div>
           # وضع علامة "pre-release" على الإصدارات الآلية فكرة جيدة
