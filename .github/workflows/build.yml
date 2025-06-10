@@ -98,8 +98,9 @@ jobs:
 
         $proc = Start-Process -FilePath $compilerExe `
             -ArgumentList "/in", "$($env:GITHUB_WORKSPACE)\Playback.ahk", "/out", "$outputFile", "/icon", "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico" `
-            -NoNewWindow -PassThru -Wait -RedirectStandardError "$env:GITHUB_WORKSPACE\stderr.txt" -RedirectStandardOutput "$env:GITHUB_WORKSPACE\stdout.txt"
+            -NoNewWindow -PassThru -RedirectStandardError "$env:GITHUB_WORKSPACE\stderr.txt" -RedirectStandardOutput "$env:GITHUB_WORKSPACE\stdout.txt"
 
+        Start-Sleep -Seconds 5
         Write-Output "Ahk2Exe exited with code: $($proc.ExitCode)"
         Get-Content "$env:GITHUB_WORKSPACE\stdout.txt"
         Get-Content "$env:GITHUB_WORKSPACE\stderr.txt"
