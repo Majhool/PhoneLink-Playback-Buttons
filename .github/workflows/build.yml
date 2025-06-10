@@ -1,0 +1,48 @@
+# .github/workflows/build.yml
+
+name: Build AHK Executable
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
+
+jobs:
+  build-exe:
+    runs-on: windows-latest
+
+    steps:
+      # الخطوة 1: جلب كود المستودع الخاص بك إلى العداء
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # الخطوة 2: إنشاء ملفات مثال (يمكنك حذف هذه الخطوة إذا كانت ملفاتك موجودة بالفعل)
+      - name: Create Dummy AHK Script and Icon Placeholder
+        shell: pwsh
+        run: |
+          New-Item -Path "src" -ItemType Directory -Force
+          Set-Content -Path "src/MyScript.ahk" -Value '#Requires AutoHotkey v2.0`r`nMsgBox "Hello from the compiled AHK script!"'
+          # ملاحظة: يجب عليك توفير ملف الأيقونة الخاص بك في المستودع
+          # New-Item -Path "assets" -ItemType Directory -Force
+          # # (Add your icon.ico to the assets folder)
+          
+      # الخطوة 3: استدعاء الأكشن المحلي الذي أنشأته
+      - name: Compile AHK Script
+        id: compile
+        uses: ./.github/actions/ahk-compiler # المسار إلى ملف action.yml
+        with:
+          script_file: 'Playback.ahk'
+          output_file: 'Playback.exe'
+          icon_file: 'play_pause_icon_137298.ico' # قم بإزالة التعليق إذا كان لديك ملف أيقونة
+          architecture: 'x64' # يمكن أن تكون 'x86' أو 'x64'
+
+      # الخطوة 4: طباعة مسار الملف الناتج (اختياري)
+      - name: Print output path
+        run: echo "Compiled file is at ${{ steps.compile.outputs.exe_path }}"
+      
+      # الخطوة 5: رفع الملف الناتج كـ "artifact" لتتمكن من تحميله
+      - name: Upload Executable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-ahk-app-x64
+          path: ${{ steps.compile.outputs.exe_path }}
