@@ -57,8 +57,8 @@ jobs:
         Start-Sleep -Seconds $waitSeconds
         Write-Output "Wait complete. Proceeding to compilation."
 
-    # Step 4: Compile the Script
-    - name: Compile Script
+    # Step 4: Compile the Script (Final Version)
+    - name: Compile the Script
       shell: pwsh
       run: |
         $compilerExe = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
@@ -66,19 +66,28 @@ jobs:
         $outputFile = Join-Path $env:GITHUB_WORKSPACE "Playback.exe"
         $iconFile = Join-Path $env:GITHUB_WORKSPACE "play_pause_icon_137298.ico"
         
-        Write-Output "Verifying final file state before compilation..."
-        Get-ChildItem -Path "C:\Program Files\AutoHotkey\Compiler" | ForEach-Object { Write-Output "Found: $($_.FullName)" }
-
+        # --- الحل النهائي: إضافة مسار AutoHotkey إلى متغير PATH ---
+        $ahk_v2_path = "C:\Program Files\AutoHotkey\v2"
+        Write-Output "Adding '$ahk_v2_path' to the PATH environment variable..."
+        $env:PATH = "$ahk_v2_path;" + $env:PATH
+        Write-Output "New PATH: $env:PATH"
+        # ---------------------------------------------------------
+        
         Write-Output "Proceeding with compilation..."
         $arguments = "/in `"$inputFile`" /out `"$outputFile`" /icon `"$iconFile`""
         Write-Output "Executing: $compilerExe $arguments"
         
         & $compilerExe $arguments
 
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 5
         # --- Final verification ---
         if ($LASTEXITCODE -ne 0) {
-            throw "Ahk2Exe.exe failed with exit code $LASTEXITCODE. There was a compilation error."
+            # لقد أضفنا فحصاً إضافياً هنا لتقديم رسالة أوضح إذا كان رمز الخروج فارغاً
+            if ($null -eq $LASTEXITCODE -or "" -eq $LASTEXITCODE) {
+                throw "COMPILER CRASHED: Ahk2Exe.exe failed without returning an exit code. This happens in CI/CD if it cannot find required base files."
+            } else {
+                throw "Ahk2Exe.exe failed with exit code $LASTEXITCODE. There was a compilation error."
+            }
         }
         if (-not (Test-Path $outputFile)) {
             throw "VERIFICATION FAILED! The output file was not found after compilation."
