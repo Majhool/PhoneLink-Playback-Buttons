@@ -96,7 +96,18 @@ jobs:
             throw "ERROR: Compiler executable not found at '$compilerExe'"
         }
 
-        & $compilerExe /in "$($env:GITHUB_WORKSPACE)\Playback.ahk" /out $outputFile /icon "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
+        $proc = Start-Process -FilePath $compilerExe `
+            -ArgumentList "/in", "$($env:GITHUB_WORKSPACE)\Playback.ahk", "/out", "$outputFile", "/icon", "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico" `
+            -NoNewWindow -PassThru -Wait -RedirectStandardError "$env:GITHUB_WORKSPACE\stderr.txt" -RedirectStandardOutput "$env:GITHUB_WORKSPACE\stdout.txt"
+
+        Write-Output "Ahk2Exe exited with code: $($proc.ExitCode)"
+        Get-Content "$env:GITHUB_WORKSPACE\stdout.txt"
+        Get-Content "$env:GITHUB_WORKSPACE\stderr.txt"
+
+        if ($proc.ExitCode -ne 0) {
+            throw "Ahk2Exe.exe failed with exit code $($proc.ExitCode). See above for details."
+        }
+
 
         Write-Output "Ahk2Exe.exe exited with code: $LASTEXITCODE"
 
