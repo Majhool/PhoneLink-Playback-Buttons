@@ -1,45 +1,29 @@
-# .github/workflows/build.yml
-
 name: Build AHK Executable
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build-exe:
     runs-on: windows-latest
 
     steps:
-      # الخطوة 1: جلب كود المستودع الخاص بك إلى العداء
-      - name: Checkout repository
+      - name: 1. Checkout Repository Code
         uses: actions/checkout@v4
 
-      - name: 🧐 List all files to verify paths
-        run: |
-            Write-Host "--- Listing all files recursively ---"
-            ls -R
-            Write-Host "-------------------------------------"
-        shell: pwsh        
-        
-      # الخطوة 2: استدعاء الأكشن المحلي الذي أنشأته
-      - name: Compile AHK Script
-        id: compile
-        uses: ./.github/actions/ahk-compiler # المسار إلى ملف action.yml
+      - name: 2. Compile AHK Script
+        id: compile  #  هذا المعرّف مهم للخطوة التالية
+        uses: ./.github/actions/ahk-compiler
         with:
           script_file: 'Playback.ahk'
-          output_file: 'release\Playback.exe'
-          icon_file: 'play_pause_icon_137298.ico' # قم بإزالة التعليق إذا كان لديك ملف أيقونة
-          architecture: 'x64' # يمكن أن تكون 'x86' أو 'x64'
+          output_file: 'release/Playback.exe'
+          icon_file: 'play_pause_icon_137298.ico'
+          architecture: 'x64'
 
-      # الخطوة 3: طباعة مسار الملف الناتج (اختياري)
-      - name: Print output path
-        run: echo "Compiled file is at ${{ steps.compile.outputs.exe_path }}"
-      
-      # الخطوة 5: رفع الملف الناتج كـ "artifact" لتتمكن من تحميله
-      - name: Upload Executable Artifact
+      - name: 3. Upload Compiled Executable
         uses: actions/upload-artifact@v4
         with:
-          name: my-ahk-app-x64
-          path: ${{ steps.compile.outputs.exe_path }}
+          name: Playback-App
+          path: ${{ steps.compile.outputs.exe_path }} # هنا يقرأ المسار من الخطوة السابقة
