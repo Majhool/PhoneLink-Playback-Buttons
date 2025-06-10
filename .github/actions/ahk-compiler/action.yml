@@ -81,7 +81,7 @@ runs:
     - name: Compile AHK Script
       shell: pwsh
       run: |
-        # --- التحقق من وجود ملفات الإدخال أولاً ---
+        # --- التحقق من وجود ملفات الإدخال ---
         Write-Host "Verifying input files exist..."
         if (-not (Test-Path "${{ inputs.script_file }}")) {
             Write-Error "Input script not found at: ${{ inputs.script_file }}"
@@ -99,8 +99,7 @@ runs:
           New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
         }
 
-        # --- تحويل كل المسارات إلى مسارات مطلقة لإزالة أي التباس ---
-        Write-Host "Converting all paths to absolute paths..."
+        # --- تحويل المسارات إلى مطلقة ---
         $scriptAbs = (Resolve-Path -Path "${{ inputs.script_file }}").Path
         $outputAbs = (Resolve-Path -Path "${{ inputs.output_file }}" -ErrorAction SilentlyContinue).Path
         if (-not $outputAbs) {
@@ -111,6 +110,7 @@ runs:
             $iconAbs = (Resolve-Path -Path "${{ inputs.icon_file }}").Path
         }
 
+        # --- إعدادات المُجمّع ---
         $ahkDir = "${{ steps.paths.outputs.ahk_dir }}"
         $compilerExe = Join-Path $ahkDir "Compiler\Ahk2Exe.exe"
         if ('${{ inputs.architecture }}' -eq 'x86') {
@@ -119,24 +119,23 @@ runs:
           $baseFile = Join-Path $ahkDir "v2\AutoHotkey64.exe"
         }
 
-        # --- بناء وسائط الأمر باستخدام المسارات المطلقة ---
-        $compileArgs = @("/silent" ,"/in", "`"$scriptAbs`"", "/out", "`"$outputAbs`"", "/base", "`"$baseFile`"")
+        # --- ✅ بناء وسائط الأمر بالطريقة الصحيحة (بدون علامات الاقتباس الإضافية) ---
+        $compileArgs = @("/silent", "/in", $scriptAbs, "/out", $outputAbs, "/base", $baseFile)
         if ($iconAbs) {
-            $compileArgs += "/icon", "`"$iconAbs`""
+            $compileArgs += "/icon", $iconAbs
         }
         
-        # --- التنفيذ النهائي ---
-        Write-Host "--- Attempting to compile with ABSOLUTE paths: ---"
+        # --- التنفيذ ---
+        Write-Host "--- Attempting to compile with command: ---"
         Write-Host "$compilerExe $($compileArgs -join ' ')"
-        Write-Host "-------------------------------------------------"
         & $compilerExe $compileArgs *>&1 | Write-Host
         
         # --- التحقق النهائي ---
         if (-not (Test-Path "${{ inputs.output_file }}")) {
-            Write-Error "COMPILATION FAILED: Final output file was not created. Check for errors in the script or its #include files."
+            Write-Error "COMPILATION FAILED: Final output file was not created. Check for errors in the script itself."
             exit 1
         }
-        Write-Host "✅ Compilation successful."
+        Write-Host "✅✅✅ VICTORY! Compilation successful. ✅✅✅"
 
     - name: Set Action Output
       id: set_output
