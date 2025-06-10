@@ -81,6 +81,11 @@ runs:
     - name: Compile AHK Script
       shell: pwsh
       run: |
+        $outputDirectory = Split-Path -Path "${{ inputs.output_file }}" -Parent
+        if ($outputDirectory) {
+          New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
+        }
+              
         $ahkDir = "${{ steps.paths.outputs.ahk_dir }}"
         $compilerExe = Join-Path $ahkDir "Compiler\Ahk2Exe.exe"
 
