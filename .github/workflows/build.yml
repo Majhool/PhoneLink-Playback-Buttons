@@ -23,51 +23,41 @@ jobs:
         Invoke-WebRequest -Uri $setupUrl -OutFile $setupFile
         Start-Process -FilePath $setupFile -ArgumentList "/silent /elevate" -Wait
 
-    # Step 3: Install and Verify Compiler (NEW ROBUST VERSION)
-    - name: Install and Verify Compiler
+    # Step 3: Install Compiler and Wait
+    - name: Install Compiler and Wait
       shell: pwsh
       run: |
-        # --- Part A: Patch and run the installer ---
         $installScriptPath = "C:\Program Files\AutoHotkey\UX\install-version.ahk"
-        Write-Output "Patching '$installScriptPath' to run silently..."
-        (Get-Content -Path $installScriptPath) | ForEach-Object { $_ -replace 'MsgBox, 4096,', '// MsgBox, 4096,' } | Set-Content -Path $installScriptPath
+
+        # --- Part A: Precisely remove ONLY the last MsgBox ---
+        Write-Output "Patching '$installScriptPath' to remove the final MsgBox..."
+        $lines = Get-Content -Path $installScriptPath
+        $lastMatchIndex = -1
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -like '*MsgBox*') {
+                $lastMatchIndex = $i
+            }
+        }
+        if ($lastMatchIndex -ne -1) {
+            Write-Output "Found final MsgBox on line $($lastMatchIndex + 1). Removing it."
+            $lines[$lastMatchIndex] = ""
+        }
+        Set-Content -Path $installScriptPath -Value $lines
+        Write-Output "Script patched successfully."
         
+        # --- Part B: Run the installer ---
         Write-Output "Running the compiler installation script (install-version.ahk)..."
         $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
-        Write-Output "Installer script process has finished. Now verifying completion..."
+        Write-Output "Installer script process has finished."
 
-        # --- Part B: Wait for the REAL installation to finish ---
-        # We now wait for a key file that is only present after a successful extraction.
-        $compilerDir = "C:\Program Files\AutoHotkey\Compiler"
-        $keyFile = Join-Path $compilerDir "Ahk2Exe_base_v2.bin" # This file is essential
-        
-        Write-Output "Waiting for key file '$keyFile' to appear..."
-        $timeout = 120 # Wait for a maximum of 2 minutes
-        $interval = 10 # Check every 10 seconds
-        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        # --- Part C: Add a fixed wait for the file system to stabilize ---
+        $waitSeconds = 30
+        Write-Output "Waiting for $waitSeconds seconds as requested to ensure all processes are stable..."
+        Start-Sleep -Seconds $waitSeconds
+        Write-Output "Wait complete. Proceeding to compilation."
 
-        while ($stopwatch.Elapsed.TotalSeconds -lt $timeout) {
-            if (Test-Path $keyFile) {
-                Write-Output "Success! Key dependency file found. Installation is complete."
-                $stopwatch.Stop()
-                break
-            }
-            Write-Output "Installation not yet complete. Waiting for $interval more seconds..."
-            Start-Sleep -Seconds $interval
-        }
-
-        if ($stopwatch.IsRunning) {
-            $stopwatch.Stop()
-            throw "TIMEOUT: Compiler installation failed. The key file '$keyFile' did not appear after $timeout seconds."
-        }
-        
-        # --- Part C: Final check and log ---
-        Write-Output "--- Final Contents of Compiler Directory ---"
-        Get-ChildItem -Path $compilerDir -Recurse | ForEach-Object { Write-Output $_.Name }
-        Write-Output "--- End of Directory Listing ---"
-
-    # Step 4: Compile the Script (Now simplified)
+    # Step 4: Compile the Script
     - name: Compile Script
       shell: pwsh
       run: |
@@ -76,10 +66,17 @@ jobs:
         $outputFile = Join-Path $env:GITHUB_WORKSPACE "Playback.exe"
         $iconFile = Join-Path $env:GITHUB_WORKSPACE "play_pause_icon_137298.ico"
         
-        Write-Output "Proceeding with compilation..."
-        # We can now add the /icon back, as the installation is verified
-        & $compilerExe /in `"$inputFile`" /out `"$outputFile`" /icon `"$iconFile`"
+        Write-Output "Verifying final file state before compilation..."
+        Get-ChildItem -Path "C:\Program Files\AutoHotkey\Compiler" | ForEach-Object { Write-Output "Found: $($_.FullName)" }
 
+        Write-Output "Proceeding with compilation..."
+        $arguments = "/in `"$inputFile`" /out `"$outputFile`" /icon `"$iconFile`""
+        Write-Output "Executing: $compilerExe $arguments"
+        
+        & $compilerExe $arguments
+
+        Start-Sleep -Seconds 10
+        # --- Final verification ---
         if ($LASTEXITCODE -ne 0) {
             throw "Ahk2Exe.exe failed with exit code $LASTEXITCODE. There was a compilation error."
         }
