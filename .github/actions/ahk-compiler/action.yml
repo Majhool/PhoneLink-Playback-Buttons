@@ -139,4 +139,6 @@ runs:
         Write-Host "✅✅✅ VICTORY! Compilation successful. ✅✅✅"
 
         Write-Host "Setting action output: exe_path -> $outputAbs"
-        echo "exe_path=$outputAbs" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        # تحويل المسار المُطلَق إلى مسار نسبي
+        $relativePath = $outputAbs.Substring($env:GITHUB_WORKSPACE.Length + 1)
+        echo "exe_path=$relativePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
