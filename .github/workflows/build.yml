@@ -25,5 +25,5 @@ jobs:
       - name: STEP 3 - UPLOAD THE FINAL ARTIFACT
         uses: actions/upload-artifact@v4
         with:
-          name: Playback-App-Final
-          path: ${{ steps.compile.outputs.exe_path }}
+            name: Playback-App-Final
+            path: ${{ steps.compile.outputs.exe_path }}
