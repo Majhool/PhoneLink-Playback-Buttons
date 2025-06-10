@@ -104,6 +104,8 @@ runs:
         Write-Host "Executing: $compilerExe $($compileArgs -join ' ')"
         & $compilerExe $compileArgs
 
+        Start-Sleep -Seconds 3
+
     - name: Set Action Output
       id: set_output
       shell: pwsh
