@@ -51,9 +51,9 @@ jobs:
         uses: softprops/action-gh-release@v2.0.6 
         with:
           tag_name: build-${{ github.run_number }}
-          name: "Release Build #${{ github.run_number }}"
+          name: "First Release 🎉"
           body: |
             This is an automated development build triggered by a push to the main branch.
           # وضع علامة "pre-release" على الإصدارات الآلية فكرة جيدة
-          prerelease: true 
+          prerelease: false 
           files: ${{ steps.get_path.outputs.path }}
