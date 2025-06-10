@@ -1,4 +1,4 @@
-name: Build AHK Executable (FINAL VERSION)
+name: Build AHK Executable (FINAL FIX)
 
 on:
   push:
@@ -22,26 +22,22 @@ jobs:
           icon_file: 'play_pause_icon_137298.ico'
           architecture: 'x64'
 
-      # خطوة جديدة للتحقق من وجود الملف والمسار
-      - name: STEP 2.5 - VERIFY COMPILED FILE AND PATH
+      - name: STEP 3 - VERIFY THE COMPILED FILE PATH
         shell: pwsh
         run: |
           $exePath = "${{ steps.compile.outputs.exe_path }}"
-          Write-Host "Verifying the output from the compile step."
-          Write-Host "Path received: '$exePath'"
+          Write-Host "Path received from compile step: '$exePath'"
           if (-not $exePath) {
-            Write-Error "FATAL: The 'exe_path' output from the compile step is empty."
+            Write-Error "FATAL: The 'exe_path' output from the compile step is still empty."
             exit 1
           }
           if (-not (Test-Path $exePath)) {
-            Write-Error "FATAL: The compiled file does not exist at the specified path: '$exePath'"
-            Write-Host "Listing contents of the current directory to debug:"
-            Get-ChildItem -Recurse -Force
+            Write-Error "FATAL: File does not exist at the specified path: '$exePath'"
             exit 1
           }
-          Write-Host "✅ Verification successful. File exists at the specified path."
+          Write-Host "✅ Verification successful. File found at: $exePath"
 
-      - name: STEP 3 - UPLOAD THE FINAL ARTIFACT
+      - name: STEP 4 - UPLOAD THE FINAL ARTIFACT
         uses: actions/upload-artifact@v4
         with:
           name: Playback-App-Final
