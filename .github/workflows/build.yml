@@ -9,7 +9,6 @@ jobs:
   build-and-release: # تم تغيير اسم الـ job ليكون أوضح
     runs-on: windows-latest
     
-    # --- هذا هو السطر المهم الذي يحل المشكلة ---
     permissions:
       contents: write # إعطاء صلاحية الكتابة لإنشاء Releases
 
@@ -48,11 +47,13 @@ jobs:
           path: ${{ steps.get_path.outputs.path }}
 
       - name: STEP 5 - CREATE GITHUB RELEASE
-        uses: softprops/action-gh-release@v2
+        # --- تم تحديث هذا السطر ---
+        uses: softprops/action-gh-release@v2.0.6 
         with:
-          # سيقوم بإنشاء tag ورقم إصدار فريد في كل مرة
           tag_name: build-${{ github.run_number }}
-          name: "Dev Build #${{ github.run_number }}"
+          name: "Release Build #${{ github.run_number }}"
           body: |
             This is an automated development build triggered by a push to the main branch.
+          # وضع علامة "pre-release" على الإصدارات الآلية فكرة جيدة
+          prerelease: true 
           files: ${{ steps.get_path.outputs.path }}
