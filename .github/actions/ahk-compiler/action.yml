@@ -139,10 +139,3 @@ runs:
 
         Write-Host "Setting action output: exe_path -> $outputAbs"
         echo "exe_path=$outputAbs" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-    - name: Set Action Output
-      id: set_output
-      shell: pwsh
-      run: |
-        $absPath = Convert-Path "${{ inputs.output_file }}"
-        echo "exe_path=$absPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
