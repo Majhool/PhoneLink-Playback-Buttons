@@ -15,7 +15,14 @@ jobs:
       # الخطوة 1: جلب كود المستودع الخاص بك إلى العداء
       - name: Checkout repository
         uses: actions/checkout@v4
-          
+
+      - name: 🧐 List all files to verify paths
+        run: |
+            Write-Host "--- Listing all files recursively ---"
+            ls -R
+            Write-Host "-------------------------------------"
+        shell: pwsh        
+        
       # الخطوة 2: استدعاء الأكشن المحلي الذي أنشأته
       - name: Compile AHK Script
         id: compile

@@ -83,33 +83,51 @@ runs:
       run: |
         $outputDirectory = Split-Path -Path "${{ inputs.output_file }}" -Parent
         if ($outputDirectory) {
+          Write-Host "Ensuring output directory '$outputDirectory' exists..."
           New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
         }
-              
+        
         $ahkDir = "${{ steps.paths.outputs.ahk_dir }}"
         $compilerExe = Join-Path $ahkDir "Compiler\Ahk2Exe.exe"
 
         if ('${{ inputs.architecture }}' -eq 'x86') {
           $baseFile = Join-Path $ahkDir "v2\AutoHotkey32.exe"
-        }
-        else {
+        } else {
           $baseFile = Join-Path $ahkDir "v2\AutoHotkey64.exe"
         }
 
-        $compileArgs = @(
-            "/in", "`"${{ inputs.script_file }}`"",
-            "/out", "`"${{ inputs.output_file }}`"",
-            "/base", "`"$baseFile`""
-        )
+        $compileArgs = @("/in", "`"${{ inputs.script_file }}`"", "/out", "`"${{ inputs.output_file }}`"", "/base", "`"$baseFile`"")
 
         if ('${{ inputs.icon_file }}') {
-            $compileArgs += "/icon", "`"${{ inputs.icon_file }}`""
+            if (Test-Path "${{ inputs.icon_file }}") {
+                $compileArgs += "/icon", "`"${{ inputs.icon_file }}`""
+            } else {
+                Write-Warning "Icon file not found at '${{ inputs.icon_file }}'. Compiling without icon."
+            }
         }
         
-        Write-Host "Executing: $compilerExe $($compileArgs -join ' ')"
-        & $compilerExe $compileArgs
+        # --- 🚀 الجزء الأهم للتشخيص 🚀 ---
+        Write-Host "--- Attempting to compile with command: ---"
+        Write-Host "$compilerExe $($compileArgs -join ' ')"
+        Write-Host "-------------------------------------------"
+        
+        # تنفيذ الأمر مع إظهار أي أخطاء (stderr)
+        & $compilerExe $compileArgs *>&1 | Write-Host
+        
+        Write-Host "--- Compilation command finished. ---"
+        Write-Host "--- Checking contents of output directory: '$outputDirectory' ---"
+        if (Test-Path $outputDirectory) {
+            ls $outputDirectory
+        } else {
+            Write-Warning "Output directory was not created."
+        }
+        Write-Host "-------------------------------------------"
 
-        Start-Sleep -Seconds 3
+        if (-not (Test-Path "${{ inputs.output_file }}")) {
+            Write-Error "COMPILATION FAILED: Final output file was not found."
+            exit 1
+        }
+        Write-Host "✅ Compilation successful. Output file created."
 
     - name: Set Action Output
       id: set_output
