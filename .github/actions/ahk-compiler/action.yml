@@ -120,7 +120,7 @@ runs:
         }
 
         # --- بناء وسائط الأمر باستخدام المسارات المطلقة ---
-        $compileArgs = @("/in", "`"$scriptAbs`"", "/out", "`"$outputAbs`"", "/base", "`"$baseFile`"")
+        $compileArgs = @("/silent" ,"/in", "`"$scriptAbs`"", "/out", "`"$outputAbs`"", "/base", "`"$baseFile`"")
         if ($iconAbs) {
             $compileArgs += "/icon", "`"$iconAbs`""
         }
