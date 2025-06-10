@@ -59,62 +59,62 @@ jobs:
         Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
         Write-Output "Secondary installation complete."
 
-        - name: Verify Installation, Compile, and Diagnose
-        shell: pwsh
-        run: |
-          $compilerFolder = "C:\Program Files\AutoHotkey\Compiler"
-          $compilerExe = Join-Path $compilerFolder "Ahk2Exe.exe"
-          $inputFile = Join-Path $env:GITHUB_WORKSPACE "Playback.ahk"
-          $outputFile = Join-Path $env:GITHUB_WORKSPACE "Playback.exe"
-          $iconFile = Join-Path $env:GITHUB_WORKSPACE "play_pause_icon_137298.ico"
-  
-          # --- 1. Verification Loop (Now waits for the specific .exe) ---
-          Write-Output "Verifying compiler installation by waiting for file: '$compilerExe'..."
-          $timeoutSeconds = 60
-          $timer = [System.Diagnostics.Stopwatch]::StartNew()
-          
-          while (-not (Test-Path -Path $compilerExe -PathType Leaf)) {
-              if ($timer.Elapsed.TotalSeconds -ge $timeoutSeconds) {
-                  throw "Timeout! Compiler executable not found at '$compilerExe' after $timeoutSeconds seconds."
-              }
-              Write-Output "Compiler not found. Waiting 5 seconds..."
-              Start-Sleep -Seconds 5
-          }
-          $timer.Stop()
-          Write-Output "Success! Compiler executable found in $($timer.Elapsed.TotalSeconds) seconds."
-          
-          # Add a short, final wait for the file system to stabilize
-          Start-Sleep -Seconds 5
-          
-          # --- 2. Compilation (Without the icon first) ---
-          Write-Output "Proceeding with compilation..."
-          Write-Output "Listing files in workspace to ensure icon and script exist:"
-          Get-ChildItem -Path $env:GITHUB_WORKSPACE
-  
-          # For debugging, we will first try to compile WITHOUT the icon.
-          # If this works, the problem is with the icon file or path.
-          $arguments = "/in `"$inputFile`" /out `"$outputFile`""
-          Write-Output "Attempting to run: & `"$compilerExe`" $arguments"
-          
-          & $compilerExe $arguments
-          
-          # --- 3. Improved Error Checking ---
-          if ($LASTEXITCODE -ne 0) {
-              if ($null -eq $LASTEXITCODE) {
-                   throw "CRITICAL ERROR: Ahk2Exe.exe failed to run or crashed instantly. It did not return an exit code. This is often caused by an invalid argument (like /icon) or an incomplete installation."
-              } else {
-                   throw "Ahk2Exe.exe failed with exit code $LASTEXITCODE. There was a compilation error."
-              }
-          }
-  
-          # --- 4. Final Verification ---
-          if (-not (Test-Path $outputFile)) {
-              throw "VERIFICATION FAILED! The output file was not found after compilation."
-          }
-          Write-Output "SUCCESS! Compiled file has been verified at '$outputFile'."
-  
-          # --- Once the above works, you can try re-enabling the icon ---
-          # & $compilerExe /in `"$inputFile`" /out `"$outputFile`" /icon `"$iconFile`"
+    - name: Verify Installation, Compile, and Diagnose
+      shell: pwsh
+      run: |
+        $compilerFolder = "C:\Program Files\AutoHotkey\Compiler"
+        $compilerExe = Join-Path $compilerFolder "Ahk2Exe.exe"
+        $inputFile = Join-Path $env:GITHUB_WORKSPACE "Playback.ahk"
+        $outputFile = Join-Path $env:GITHUB_WORKSPACE "Playback.exe"
+        $iconFile = Join-Path $env:GITHUB_WORKSPACE "play_pause_icon_137298.ico"
+
+        # --- 1. Verification Loop (Now waits for the specific .exe) ---
+        Write-Output "Verifying compiler installation by waiting for file: '$compilerExe'..."
+        $timeoutSeconds = 60
+        $timer = [System.Diagnostics.Stopwatch]::StartNew()
+        
+        while (-not (Test-Path -Path $compilerExe -PathType Leaf)) {
+            if ($timer.Elapsed.TotalSeconds -ge $timeoutSeconds) {
+                throw "Timeout! Compiler executable not found at '$compilerExe' after $timeoutSeconds seconds."
+            }
+            Write-Output "Compiler not found. Waiting 5 seconds..."
+            Start-Sleep -Seconds 5
+        }
+        $timer.Stop()
+        Write-Output "Success! Compiler executable found in $($timer.Elapsed.TotalSeconds) seconds."
+        
+        # Add a short, final wait for the file system to stabilize
+        Start-Sleep -Seconds 5
+        
+        # --- 2. Compilation (Without the icon first) ---
+        Write-Output "Proceeding with compilation..."
+        Write-Output "Listing files in workspace to ensure icon and script exist:"
+        Get-ChildItem -Path $env:GITHUB_WORKSPACE
+
+        # For debugging, we will first try to compile WITHOUT the icon.
+        # If this works, the problem is with the icon file or path.
+        $arguments = "/in `"$inputFile`" /out `"$outputFile`""
+        Write-Output "Attempting to run: & `"$compilerExe`" $arguments"
+        
+        & $compilerExe $arguments
+        
+        # --- 3. Improved Error Checking ---
+        if ($LASTEXITCODE -ne 0) {
+            if ($null -eq $LASTEXITCODE) {
+                 throw "CRITICAL ERROR: Ahk2Exe.exe failed to run or crashed instantly. It did not return an exit code. This is often caused by an invalid argument (like /icon) or an incomplete installation."
+            } else {
+                 throw "Ahk2Exe.exe failed with exit code $LASTEXITCODE. There was a compilation error."
+            }
+        }
+
+        # --- 4. Final Verification ---
+        if (-not (Test-Path $outputFile)) {
+            throw "VERIFICATION FAILED! The output file was not found after compilation."
+        }
+        Write-Output "SUCCESS! Compiled file has been verified at '$outputFile'."
+
+        # --- Once the above works, you can try re-enabling the icon ---
+        # & $compilerExe /in `"$inputFile`" /out `"$outputFile`" /icon `"$iconFile`"
               
     # الخطوة 5: رفع الملف التنفيذي الناتج
     - name: Upload executable
