@@ -20,7 +20,7 @@ Tray := A_TrayMenu
 ; إنشاء القائمة الجديدة
 Tray.Delete()
 Tray.Add("✨ رابط الاداة ✨", OpenToolLink) ; أضف النص الذي تريده في الأعلى
-Tray.Add("✨ رابط حسابي على Github ✨", OpenAccountLink)
+Tray.Add(Chr(0x202B) . "✨ رابط حسابي على Github ✨" . Chr(0x202C), OpenAccountLink)
 Tray.Add() ; خط فاصل
 Tray.Add("تعليق التشغيل السريع", SuspendScript)
 Tray.Add("إيقاف مؤقت للاداة", PauseScript)
