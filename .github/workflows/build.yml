@@ -116,6 +116,41 @@ jobs:
         }
         Write-Output "=== End of Preview ==="
 
+        # === التحقق من صحة سكربت AutoHotkey قبل التحويل ===
+        Write-Output "=== Syntax Check ==="
+        try {
+            $ahkInterpreter = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
+            if (Test-Path $ahkInterpreter) {
+                Write-Output "Testing script syntax with AutoHotkey interpreter..."
+                # تشغيل السكربت في وضع التحقق من الصحة فقط
+                $syntaxCheck = Start-Process -FilePath $ahkInterpreter -ArgumentList "/ErrorStdOut", "/validate", "`"$sourceFile`"" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "syntax_output.txt" -RedirectStandardError "syntax_error.txt"
+                
+                if (Test-Path "syntax_error.txt") {
+                    $syntaxErrors = Get-Content "syntax_error.txt" -Raw
+                    if ($syntaxErrors.Trim()) {
+                        Write-Output "=== SYNTAX ERRORS FOUND ==="
+                        Write-Output $syntaxErrors
+                        Write-Output "=== END SYNTAX ERRORS ==="
+                    }
+                }
+                
+                if (Test-Path "syntax_output.txt") {
+                    $syntaxOutput = Get-Content "syntax_output.txt" -Raw
+                    if ($syntaxOutput.Trim()) {
+                        Write-Output "=== Syntax Check Output ==="
+                        Write-Output $syntaxOutput
+                        Write-Output "=== End Syntax Output ==="
+                    }
+                }
+                
+                Write-Output "Syntax check exit code: $($syntaxCheck.ExitCode)"
+            } else {
+                Write-Output "AutoHotkey interpreter not found, skipping syntax check"
+            }
+        } catch {
+            Write-Output "Syntax check failed: $($_.Exception.Message)"
+        }
+
         # === بناء أمر التحويل ===
         $compilerArgs = @("/in", "`"$sourceFile`"", "/out", "`"$outputFile`"")
         if ($iconFile) {
@@ -126,9 +161,32 @@ jobs:
         Write-Output "Compiler: $compilerExe"
         Write-Output "Arguments: $($compilerArgs -join ' ')"
 
-        # === تشغيل المحول مع التقاط الأخطاء التفصيلية ===
+        # === تشغيل المحول مع مهلة زمنية وتقاط الأخطاء التفصيلية ===
         try {
-            $process = Start-Process -FilePath $compilerExe -ArgumentList $compilerArgs -NoNewWindow -Wait -PassThru -RedirectStandardOutput "compiler_output.txt" -RedirectStandardError "compiler_error.txt"
+            Write-Output "Starting compiler process with 3-minute timeout..."
+            $process = Start-Process -FilePath $compilerExe -ArgumentList $compilerArgs -NoNewWindow -PassThru -RedirectStandardOutput "compiler_output.txt" -RedirectStandardError "compiler_error.txt"
+            
+            # انتظار لـ 3 دقائق كحد أقصى
+            $timeoutMinutes = 3
+            Write-Output "Waiting for compilation to complete (timeout: $timeoutMinutes minutes)..."
+            $completed = $process.WaitForExit($timeoutMinutes * 60 * 1000)
+            
+            if (-not $completed) {
+                Write-Output "⚠ TIMEOUT: Compiler has been running for more than $timeoutMinutes minutes!"
+                Write-Output "This usually indicates an infinite loop or blocking operation in the AutoHotkey script."
+                Write-Output "Attempting to terminate the compiler process..."
+                
+                try {
+                    $process.Kill()
+                    $process.WaitForExit(5000) # انتظار 5 ثوان للإنهاء
+                    Write-Output "Compiler process terminated."
+                } catch {
+                    Write-Output "Failed to terminate compiler process: $($_.Exception.Message)"
+                }
+                
+                throw "Compilation timed out after $timeoutMinutes minutes. Check your AutoHotkey script for infinite loops or blocking operations."
+            }
+            
             $exitCode = $process.ExitCode
             
             Write-Output "=== Compilation Results ==="
@@ -194,4 +252,6 @@ jobs:
         path: |
           compiler_output.txt
           compiler_error.txt
+          syntax_output.txt
+          syntax_error.txt
         if-no-files-found: ignore
