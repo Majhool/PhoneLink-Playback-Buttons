@@ -1,45 +1,37 @@
-# .github/workflows/build.yml
+# اسم سير العمل (Workflow) الذي سيظهر في قسم Actions في GitHub
+name: Check for AutoHotkey Folder
 
-name: Build AHK Executable
-
+# يحدد متى يتم تشغيل هذا السير العمل
+# في هذه الحالة، يتم تشغيله عند أي عملية دفع (push) إلى الفرع الرئيسي (main)
+# أو يمكن تشغيله يدويًا من واجهة GitHub
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
+    branches: [ main ]
+  workflow_dispatch:
 
+# الوظائف (Jobs) التي سيتم تنفيذها
 jobs:
-  build-exe:
+  # وظيفة واحدة باسم "check-folder-existence"
+  check-folder-existence:
+    # تحديد نظام التشغيل الذي ستعمل عليه الوظيفة
+    # بما أن المسار هو مسار ويندوز، نستخدم أحدث نسخة من ويندوز
     runs-on: windows-latest
 
+    # الخطوات (Steps) التي سيتم تنفيذها في هذه الوظيفة
     steps:
-      # الخطوة 1: جلب كود المستودع الخاص بك إلى العداء
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    # الخطوة الأولى: التحقق من وجود المجلد باستخدام PowerShell
+    - name: Check if AutoHotkey folder exists
+      run: |
+        # المسار الذي نريد التحقق منه
+        $folderPath = "C:\Program Files\AutoHotkey"
 
-      - name: 🧐 List all files to verify paths
-        run: |
-            Write-Host "--- Listing all files recursively ---"
-            ls -R
-            Write-Host "-------------------------------------"
-        shell: pwsh        
-        
-      # الخطوة 2: استدعاء الأكشن المحلي الذي أنشأته
-      - name: Compile AHK Script
-        id: compile
-        uses: ./.github/actions/ahk-compiler # المسار إلى ملف action.yml
-        with:
-          script_file: 'Playback.ahk'
-          output_file: 'release\Playback.exe'
-          icon_file: 'play_pause_icon_137298.ico' # قم بإزالة التعليق إذا كان لديك ملف أيقونة
-          architecture: 'x64' # يمكن أن تكون 'x86' أو 'x64'
-
-      # الخطوة 3: طباعة مسار الملف الناتج (اختياري)
-      - name: Print output path
-        run: echo "Compiled file is at ${{ steps.compile.outputs.exe_path }}"
-      
-      # الخطوة 5: رفع الملف الناتج كـ "artifact" لتتمكن من تحميله
-      - name: Upload Executable Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-ahk-app-x64
-          path: ${{ steps.compile.outputs.exe_path }}
+        # استخدام Test-Path للتحقق من وجود المسار
+        if (Test-Path $folderPath) {
+          # إذا كان المجلد موجودًا، اطبع رسالة نجاح
+          Write-Host "Success: AutoHotkey folder found at $folderPath"
+        } else {
+          # إذا لم يكن المجلد موجودًا، اطبع رسالة خطأ
+          Write-Host "Error: AutoHotkey folder not found at $folderPath"
+          # إنهاء السكريبت مع رمز خطأ، مما يؤدي إلى فشل سير العمل
+          exit 1
+        }
