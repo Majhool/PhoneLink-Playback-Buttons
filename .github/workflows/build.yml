@@ -1,4 +1,4 @@
-name: Build AHK Executable (File-Based Method)
+name: Build and Release Executable
 
 on:
   push:
@@ -6,8 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-the-exe:
+  build-and-release: # تم تغيير اسم الـ job ليكون أوضح
     runs-on: windows-latest
+    
+    # --- هذا هو السطر المهم الذي يحل المشكلة ---
+    permissions:
+      contents: write # إعطاء صلاحية الكتابة لإنشاء Releases
 
     steps:
       - name: STEP 1 - CHECKOUT THE CODE
@@ -26,32 +30,29 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path "exe_path.txt")) {
-            Write-Error "FATAL: The file 'exe_path.txt' was not created by the compile action."
+            Write-Error "FATAL: The file 'exe_path.txt' was not created."
             exit 1
           }
           $exePath = Get-Content -Path "exe_path.txt"
-          Write-Host "Path read from file: '$exePath'"
           if (-not (Test-Path $exePath)) {
             Write-Error "FATAL: The file specified in exe_path.txt does not exist at: '$exePath'"
             exit 1
           }
-          Write-Host "✅ Verification successful. File found."
-          # Set the path as an output of THIS step
+          Write-Host "✅ Path verified: $exePath"
           echo "path=$exePath" >> $env:GITHUB_OUTPUT
 
-      - name: STEP 4 - UPLOAD THE FINAL ARTIFACT
+      - name: STEP 4 - UPLOAD ARTIFACT (For Logs)
         uses: actions/upload-artifact@v4
         with:
-          name: Playback-App-Final
+          name: Playback-App-Internal-Build
           path: ${{ steps.get_path.outputs.path }}
 
-      - name: STEP 5 - CREATE GITHUB RELEASE AND UPLOAD EXE
+      - name: STEP 5 - CREATE GITHUB RELEASE
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: "Playback Release v1.0.${{ github.run_number }}"
+          # سيقوم بإنشاء tag ورقم إصدار فريد في كل مرة
+          tag_name: build-${{ github.run_number }}
+          name: "Dev Build #${{ github.run_number }}"
+          body: |
+            This is an automated development build triggered by a push to the main branch.
           files: ${{ steps.get_path.outputs.path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
