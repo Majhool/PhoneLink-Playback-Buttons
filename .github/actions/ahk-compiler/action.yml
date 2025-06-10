@@ -91,6 +91,8 @@ runs:
         Write-Host "Compiling with command: $compilerExe $($compileArgs -join ' ')"
         & $compilerExe $compileArgs
         
+        Start-Sleep -Seconds 3
+
         # --- 5. NOW, check if the output file was created ---
         if (-not (Test-Path $outputAbs)) {
             Write-Error "COMPILATION FAILED: Final output file was not created at '$outputAbs'."
