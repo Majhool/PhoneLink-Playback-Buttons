@@ -81,6 +81,7 @@ jobs:
             Start-Sleep -Seconds $intervalSeconds
         }
         $timer.Stop()
+        Start-Sleep -Seconds 20
         Write-Output "Success! Compiler folder found in $($timer.Elapsed.TotalSeconds) seconds."
         # ==========================================
 
