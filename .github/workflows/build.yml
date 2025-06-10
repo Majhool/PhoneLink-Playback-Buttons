@@ -10,248 +10,288 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # الخطوة 1: الحصول على الكود
-    - name: Checkout code
-      uses: actions/checkout@v4
+      # الخطوة 1: الحصول على الكود
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # الخطوة 2: تثبيت نواة AutoHotkey
-    - name: Install AutoHotkey Core
-      shell: pwsh
-      run: |
-        $setupUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19_setup.exe"
-        $setupFile = "AutoHotkey_setup.exe"
-        Invoke-WebRequest -Uri $setupUrl -OutFile $setupFile
-        Start-Process -FilePath $setupFile -ArgumentList "/silent /elevate" -Wait
+      # الخطوة 2: تثبيت نواة AutoHotkey
+      - name: Install AutoHotkey Core
+        shell: pwsh
+        run: |
+          $setupUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19_setup.exe"
+          $setupFile = "AutoHotkey_setup.exe"
+          Invoke-WebRequest -Uri $setupUrl -OutFile $setupFile
+          Start-Process -FilePath $setupFile -ArgumentList "/silent /elevate" -Wait
 
-    # الخطوة 3: تثبيت المحول Ahk2Exe (مع تعديل السكربت ليصبح صامتاً)
-    - name: Install Compiler (and Patch Script)
-      shell: pwsh
-      run: |
-        $installScriptPath = "C:\Program Files\AutoHotkey\UX\install-version.ahk"
+      # الخطوة 3: تثبيت المحول Ahk2Exe (مع تعديل السكربت ليصبح صامتاً)
+      - name: Install Compiler (and Patch Script)
+        shell: pwsh
+        run: |
+          $installScriptPath = "C:\Program Files\AutoHotkey\UX\install-version.ahk"
 
-        Write-Output "Patching '$installScriptPath' to remove ONLY the final MsgBox..."
-        
-        # === الكود الجديد لتحديد وحذف السطر الأخير فقط ===
-        # نقرأ الملف كمصفوفة من السطور
-        $lines = Get-Content -Path $installScriptPath
-        
-        # نبحث عن رقم السطر الأخير الذي يحتوي على كلمة MsgBox
-        $lastMatchIndex = -1
-        for ($i = 0; $i -lt $lines.Count; $i++) {
-            if ($lines[$i] -like '*MsgBox*') {
-                $lastMatchIndex = $i
-            }
-        }
-        
-        # إذا وجدنا سطراً مطابقاً، نقوم بحذفه (عبر جعله فارغاً)
-        if ($lastMatchIndex -ne -1) {
-            Write-Output "Found MsgBox on line $($lastMatchIndex + 1). Removing it."
-            $lines[$lastMatchIndex] = ""
-        }
-        
-        # نحفظ الملف مرة أخرى بعد إزالة السطر
-        Set-Content -Path $installScriptPath -Value $lines
-        # =======================================================
+          Write-Output "Patching '$installScriptPath' to remove ONLY the final MsgBox..."
+          
+          # === الكود الجديد لتحديد وحذف السطر الأخير فقط ===
+          # نقرأ الملف كمصفوفة من السطور
+          $lines = Get-Content -Path $installScriptPath
+          
+          # نبحث عن رقم السطر الأخير الذي يحتوي على كلمة MsgBox
+          $lastMatchIndex = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -like '*MsgBox*') {
+                  $lastMatchIndex = $i
+              }
+          }
+          
+          # إذا وجدنا سطراً مطابقاً، نقوم بحذفه (عبر جعله فارغاً)
+          if ($lastMatchIndex -ne -1) {
+              Write-Output "Found MsgBox on line $($lastMatchIndex + 1). Removing it."
+              $lines[$lastMatchIndex] = ""
+          }
+          
+          # نحفظ الملف مرة أخرى بعد إزالة السطر
+          Set-Content -Path $installScriptPath -Value $lines
+          # =======================================================
 
-        Write-Output "Script patched successfully. Now running the installer..."
+          Write-Output "Script patched successfully. Now running the installer..."
 
-        $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
-        Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
-        Write-Output "Secondary installation complete."
+          $interpreterPath = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
+          Start-Process -FilePath $interpreterPath -ArgumentList "/script `"$installScriptPath`"" -Wait
+          Write-Output "Secondary installation complete."
 
-    - name: Debug and Compile with Enhanced Error Handling
-      shell: pwsh
-      run: |
-        $compilerFolder = "C:\Program Files\AutoHotkey\Compiler"
-        $compilerExe = "$compilerFolder\Ahk2Exe.exe"
-        $sourceFile = "$($env:GITHUB_WORKSPACE)\Playback.ahk"
-        $iconFile = "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
-        $outputFile = "$($env:GITHUB_WORKSPACE)\Playback.exe"
+      - name: Debug and Compile with Enhanced Error Handling
+        shell: pwsh
+        run: |
+          # --- تعريف المتغيرات والمسارات ---
+          $compilerFolder = "C:\Program Files\AutoHotkey\Compiler"
+          $compilerExe = "$compilerFolder\Ahk2Exe.exe"
+          $sourceFile = "$($env:GITHUB_WORKSPACE)\Playback.ahk"
+          $iconFile = "$($env:GITHUB_WORKSPACE)\play_pause_icon_137298.ico"
+          $outputFile = "$($env:GITHUB_WORKSPACE)\Playback.exe"
 
-        # === حلقة التحقق مع مؤقت التي طلبتها ===
-        Write-Output "Verifying compiler installation by waiting for folder: '$compilerFolder'..."
-        $timeoutSeconds = 60
-        $intervalSeconds = 5
-        $timer = [System.Diagnostics.Stopwatch]::StartNew()
-        
-        while (-not (Test-Path $compilerFolder)) {
-            if ($timer.Elapsed.TotalSeconds -ge $timeoutSeconds) {
-                throw "Timeout! Compiler folder not found at '$compilerFolder' after $timeoutSeconds seconds."
-            }
-            Write-Output "Compiler folder not found. Waiting for $intervalSeconds seconds before checking again..."
-            Start-Sleep -Seconds $intervalSeconds
-        }
-        $timer.Stop()
-        Start-Sleep -Seconds 20
-        Write-Output "Success! Compiler folder found in $($timer.Elapsed.TotalSeconds) seconds."
-        # ==========================================
+          # --- إنشاء سكربت مؤقت للتحقق من الصحة (بطريقة آمنة لـ YAML) ---
+          $testScriptLines = @(
+              '; Test script to validate syntax',
+              'try {',
+              "    #Include `"$sourceFile`"",
+              '    ExitApp(0)',
+              '} catch as e {',
+              '    FileAppend("Syntax Error: " . e.Message . "`n", "syntax_error.txt")',
+              '    ExitApp(1)',
+              '}'
+          )
+          $testScript = $testScriptLines -join "`n"
 
-        # === التحقق من وجود الملفات المطلوبة ===
-        Write-Output "=== Pre-compilation Checks ==="
-        Write-Output "Checking source file: '$sourceFile'"
-        if (-not (Test-Path $sourceFile)) {
-            throw "ERROR: Source file 'Playback.ahk' not found!"
-        }
-        Write-Output "✓ Source file found"
+          # === حلقة التحقق مع مؤقت التي طلبتها ===
+          Write-Output "Verifying compiler installation by waiting for folder: '$compilerFolder'..."
+          $timeoutSeconds = 60
+          $intervalSeconds = 5
+          $timer = [System.Diagnostics.Stopwatch]::StartNew()
+          
+          while (-not (Test-Path $compilerFolder)) {
+              if ($timer.Elapsed.TotalSeconds -ge $timeoutSeconds) {
+                  throw "Timeout! Compiler folder not found at '$compilerFolder' after $timeoutSeconds seconds."
+              }
+              Write-Output "Compiler folder not found. Waiting for $intervalSeconds seconds before checking again..."
+              Start-Sleep -Seconds $intervalSeconds
+          }
+          $timer.Stop()
+          Start-Sleep -Seconds 20
+          Write-Output "Success! Compiler folder found in $($timer.Elapsed.TotalSeconds) seconds."
+          # ==========================================
 
-        Write-Output "Checking icon file: '$iconFile'"
-        if (-not (Test-Path $iconFile)) {
-            Write-Output "⚠ Warning: Icon file not found, compilation will proceed without icon"
-            $iconFile = $null
-        } else {
-            Write-Output "✓ Icon file found"
-        }
+          # === التحقق من وجود الملفات المطلوبة ===
+          Write-Output "=== Pre-compilation Checks ==="
+          Write-Output "Checking source file: '$sourceFile'"
+          if (-not (Test-Path $sourceFile)) {
+              throw "ERROR: Source file 'Playback.ahk' not found!"
+          }
+          Write-Output "✓ Source file found"
 
-        Write-Output "Checking compiler executable: '$compilerExe'"
-        if (-not (Test-Path $compilerExe)) {
-            throw "ERROR: Compiler executable not found at '$compilerExe'"
-        }
-        Write-Output "✓ Compiler executable found"
+          Write-Output "Checking icon file: '$iconFile'"
+          if (-not (Test-Path $iconFile)) {
+              Write-Output "⚠ Warning: Icon file not found, compilation will proceed without icon"
+              $iconFile = $null
+          } else {
+              Write-Output "✓ Icon file found"
+          }
 
-        # === عرض محتوى أول 20 سطر من الملف المصدري للتشخيص ===
-        Write-Output "=== Source File Preview (First 20 lines) ==="
-        $sourceContent = Get-Content -Path $sourceFile -TotalCount 20
-        for ($i = 0; $i -lt $sourceContent.Count; $i++) {
-            Write-Output "Line $($i + 1): $($sourceContent[$i])"
-        }
-        Write-Output "=== End of Preview ==="
+          Write-Output "Checking compiler executable: '$compilerExe'"
+          if (-not (Test-Path $compilerExe)) {
+              throw "ERROR: Compiler executable not found at '$compilerExe'"
+          }
+          Write-Output "✓ Compiler executable found"
 
-        # === التحقق من صحة سكربت AutoHotkey قبل التحويل ===
-        Write-Output "=== Syntax Check ==="
-        try {
-            $ahkInterpreter = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
-            if (Test-Path $ahkInterpreter) {
-                Write-Output "Testing script syntax with AutoHotkey interpreter..."
-                # تشغيل السكربت في وضع التحقق من الصحة فقط
-                $syntaxCheck = Start-Process -FilePath $ahkInterpreter -ArgumentList "/ErrorStdOut", "/validate", "`"$sourceFile`"" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "syntax_output.txt" -RedirectStandardError "syntax_error.txt"
-                
-                if (Test-Path "syntax_error.txt") {
-                    $syntaxErrors = Get-Content "syntax_error.txt" -Raw
-                    if ($syntaxErrors.Trim()) {
-                        Write-Output "=== SYNTAX ERRORS FOUND ==="
-                        Write-Output $syntaxErrors
-                        Write-Output "=== END SYNTAX ERRORS ==="
-                    }
-                }
-                
-                if (Test-Path "syntax_output.txt") {
-                    $syntaxOutput = Get-Content "syntax_output.txt" -Raw
-                    if ($syntaxOutput.Trim()) {
-                        Write-Output "=== Syntax Check Output ==="
-                        Write-Output $syntaxOutput
-                        Write-Output "=== End Syntax Output ==="
-                    }
-                }
-                
-                Write-Output "Syntax check exit code: $($syntaxCheck.ExitCode)"
-            } else {
-                Write-Output "AutoHotkey interpreter not found, skipping syntax check"
-            }
-        } catch {
-            Write-Output "Syntax check failed: $($_.Exception.Message)"
-        }
+          # === عرض محتوى أول 20 سطر من الملف المصدري للتشخيص ===
+          Write-Output "=== Source File Preview (First 20 lines) ==="
+          $sourceContent = Get-Content -Path $sourceFile -TotalCount 20
+          for ($i = 0; $i -lt $sourceContent.Count; $i++) {
+              Write-Output "Line $($i + 1): $($sourceContent[$i])"
+          }
+          Write-Output "=== End of Preview ==="
 
-        # === بناء أمر التحويل ===
-        $compilerArgs = @("/in", "`"$sourceFile`"", "/out", "`"$outputFile`"")
-        if ($iconFile) {
-            $compilerArgs += "/icon", "`"$iconFile`""
-        }
+          # === التحقق من صحة سكربت AutoHotkey قبل التحويل ===
+          Write-Output "=== Syntax Check ==="
+          try {
+              $ahkInterpreter = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
+              if (Test-Path $ahkInterpreter) {
+                  Write-Output "Testing script syntax with AutoHotkey interpreter..."
+                                    
+                  $testScriptPath = "$($env:GITHUB_WORKSPACE)\syntax_test.ahk"
+                  Set-Content -Path $testScriptPath -Value $testScript -Encoding UTF8
+                  
+                  # تشغيل السكربت التجريبي مع مهلة زمنية
+                  Write-Output "Running syntax validation test..."
+                  $syntaxProcess = Start-Process -FilePath $ahkInterpreter -ArgumentList "`"$testScriptPath`"" -NoNewWindow -PassThru -RedirectStandardOutput "syntax_output.txt" -RedirectStandardError "syntax_error.txt"
+                  
+                  # انتظار 30 ثانية كحد أقصى للتحقق من الصحة
+                  $syntaxCompleted = $syntaxProcess.WaitForExit(30000)
+                  
+                  if (-not $syntaxCompleted) {
+                      Write-Output "⚠ Syntax check timed out - this might indicate infinite loops or blocking operations"
+                      try {
+                          $syntaxProcess.Kill()
+                          $syntaxProcess.WaitForExit(5000)
+                      } catch {
+                          Write-Output "Failed to terminate syntax check process"
+                      }
+                  } else {
+                      Write-Output "Syntax check completed with exit code: $($syntaxProcess.ExitCode)"
+                  }
+                  
+                  # عرض نتائج التحقق
+                  if (Test-Path "syntax_error.txt") {
+                      $syntaxErrors = Get-Content "syntax_error.txt" -Raw -ErrorAction SilentlyContinue
+                      if ($syntaxErrors -and $syntaxErrors.Trim()) {
+                          Write-Output "=== SYNTAX ERRORS FOUND ==="
+                          Write-Output $syntaxErrors
+                          Write-Output "=== END SYNTAX ERRORS ==="
+                      }
+                  }
+                  
+                  if (Test-Path "syntax_output.txt") {
+                      $syntaxOutput = Get-Content "syntax_output.txt" -Raw -ErrorAction SilentlyContinue
+                      if ($syntaxOutput -and $syntaxOutput.Trim()) {
+                          Write-Output "=== Syntax Check Output ==="
+                          Write-Output $syntaxOutput
+                          Write-Output "=== End Syntax Output ==="
+                      }
+                  }
+                  
+                  # تنظيف الملف المؤقت
+                  if (Test-Path $testScriptPath) {
+                      Remove-Item $testScriptPath -Force -ErrorAction SilentlyContinue
+                  }
+                  
+              } else {
+                  Write-Output "AutoHotkey interpreter not found, skipping syntax check"
+              }
+          } catch {
+              Write-Output "Syntax check failed: $($_.Exception.Message)"
+          }
 
-        Write-Output "=== Starting Compilation ==="
-        Write-Output "Compiler: $compilerExe"
-        Write-Output "Arguments: $($compilerArgs -join ' ')"
+          # === بناء أمر التحويل ===
+          $compilerArgs = @("/in", "`"$sourceFile`"", "/out", "`"$outputFile`"")
+          if ($iconFile) {
+              $compilerArgs += "/icon", "`"$iconFile`""
+          }
 
-        # === تشغيل المحول مع مهلة زمنية وتقاط الأخطاء التفصيلية ===
-        try {
-            Write-Output "Starting compiler process with 3-minute timeout..."
-            $process = Start-Process -FilePath $compilerExe -ArgumentList $compilerArgs -NoNewWindow -PassThru -RedirectStandardOutput "compiler_output.txt" -RedirectStandardError "compiler_error.txt"
-            
-            # انتظار لـ 3 دقائق كحد أقصى
-            $timeoutMinutes = 3
-            Write-Output "Waiting for compilation to complete (timeout: $timeoutMinutes minutes)..."
-            $completed = $process.WaitForExit($timeoutMinutes * 60 * 1000)
-            
-            if (-not $completed) {
-                Write-Output "⚠ TIMEOUT: Compiler has been running for more than $timeoutMinutes minutes!"
-                Write-Output "This usually indicates an infinite loop or blocking operation in the AutoHotkey script."
-                Write-Output "Attempting to terminate the compiler process..."
-                
-                try {
-                    $process.Kill()
-                    $process.WaitForExit(5000) # انتظار 5 ثوان للإنهاء
-                    Write-Output "Compiler process terminated."
-                } catch {
-                    Write-Output "Failed to terminate compiler process: $($_.Exception.Message)"
-                }
-                
-                throw "Compilation timed out after $timeoutMinutes minutes. Check your AutoHotkey script for infinite loops or blocking operations."
-            }
-            
-            $exitCode = $process.ExitCode
-            
-            Write-Output "=== Compilation Results ==="
-            Write-Output "Exit Code: $exitCode"
-            
-            # عرض مخرجات المحول
-            if (Test-Path "compiler_output.txt") {
-                $output = Get-Content "compiler_output.txt" -Raw
-                if ($output.Trim()) {
-                    Write-Output "=== Compiler Output ==="
-                    Write-Output $output
-                }
-            }
-            
-            # عرض أخطاء المحول
-            if (Test-Path "compiler_error.txt") {
-                $errorOutput = Get-Content "compiler_error.txt" -Raw
-                if ($errorOutput.Trim()) {
-                    Write-Output "=== Compiler Errors ==="
-                    Write-Output $errorOutput
-                }
-            }
-            
-            # التحقق من نجاح التحويل
-            if ($exitCode -ne 0) {
-                throw "Ahk2Exe.exe failed with exit code $exitCode. Check the error messages above."
-            }
-            
-        } catch {
-            Write-Output "=== Exception during compilation ==="
-            Write-Output $_.Exception.Message
-            throw "Compilation failed: $($_.Exception.Message)"
-        }
+          Write-Output "=== Starting Compilation ==="
+          Write-Output "Compiler: $compilerExe"
+          Write-Output "Arguments: $($compilerArgs -join ' ')"
 
-        # === التحقق النهائي من وجود الملف الناتج ===
-        if (-not (Test-Path $outputFile)) {
-            # عرض محتويات المجلد لمساعدة التشخيص
-            Write-Output "=== Directory Contents for Debugging ==="
-            Get-ChildItem -Path $env:GITHUB_WORKSPACE | ForEach-Object {
-                Write-Output "$($_.Name) - Size: $($_.Length) bytes"
-            }
-            throw "VERIFICATION FAILED! The output file was not found after compilation."
-        }
-        
-        $outputFileInfo = Get-Item $outputFile
-        Write-Output "SUCCESS! Compiled file created at '$outputFile'"
-        Write-Output "File size: $($outputFileInfo.Length) bytes"
-        Write-Output "Created: $($outputFileInfo.CreationTime)"
+          # === تشغيل المحول مع مهلة زمنية وتقاط الأخطاء التفصيلية ===
+          try {
+              Write-Output "Starting compiler process with 3-minute timeout..."
+              $process = Start-Process -FilePath $compilerExe -ArgumentList $compilerArgs -NoNewWindow -PassThru -RedirectStandardOutput "compiler_output.txt" -RedirectStandardError "compiler_error.txt"
               
-    # الخطوة 5: رفع الملف التنفيذي الناتج
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: Compiled-Program
-        path: Playback.exe
-        
-    # خطوة إضافية: رفع ملفات التشخيص في حال الفشل
-    - name: Upload debug files (if they exist)
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: Debug-Files
-        path: |
-          compiler_output.txt
-          compiler_error.txt
-          syntax_output.txt
-          syntax_error.txt
-        if-no-files-found: ignore
+              # انتظار لـ 3 دقائق كحد أقصى
+              $timeoutMinutes = 3
+              Write-Output "Waiting for compilation to complete (timeout: $timeoutMinutes minutes)..."
+              $completed = $process.WaitForExit($timeoutMinutes * 60 * 1000)
+              
+              if (-not $completed) {
+                  Write-Output "⚠ TIMEOUT: Compiler has been running for more than $timeoutMinutes minutes!"
+                  Write-Output "This usually indicates an infinite loop or blocking operation in the AutoHotkey script."
+                  Write-Output "Attempting to terminate the compiler process..."
+                  
+                  try {
+                      $process.Kill()
+                      $process.WaitForExit(5000) # انتظار 5 ثوان للإنهاء
+                      Write-Output "Compiler process terminated."
+                  } catch {
+                      Write-Output "Failed to terminate compiler process: $($_.Exception.Message)"
+                  }
+                  
+                  throw "Compilation timed out after $timeoutMinutes minutes. Check your AutoHotkey script for infinite loops or blocking operations."
+              }
+              
+              $exitCode = $process.ExitCode
+              
+              Write-Output "=== Compilation Results ==="
+              Write-Output "Exit Code: $exitCode"
+              
+              # عرض مخرجات المحول
+              if (Test-Path "compiler_output.txt") {
+                  $output = Get-Content "compiler_output.txt" -Raw
+                  if ($output.Trim()) {
+                      Write-Output "=== Compiler Output ==="
+                      Write-Output $output
+                  }
+              }
+              
+              # عرض أخطاء المحول
+              if (Test-Path "compiler_error.txt") {
+                  $errorOutput = Get-Content "compiler_error.txt" -Raw
+                  if ($errorOutput.Trim()) {
+                      Write-Output "=== Compiler Errors ==="
+                      Write-Output $errorOutput
+                  }
+              }
+              
+              # التحقق من نجاح التحويل
+              if ($exitCode -ne 0) {
+                  throw "Ahk2Exe.exe failed with exit code $exitCode. Check the error messages above."
+              }
+              
+          } catch {
+              Write-Output "=== Exception during compilation ==="
+              Write-Output $_.Exception.Message
+              throw "Compilation failed: $($_.Exception.Message)"
+          }
+
+          # === التحقق النهائي من وجود الملف الناتج ===
+          if (-not (Test-Path $outputFile)) {
+              # عرض محتويات المجلد لمساعدة التشخيص
+              Write-Output "=== Directory Contents for Debugging ==="
+              Get-ChildItem -Path $env:GITHUB_WORKSPACE | ForEach-Object {
+                  Write-Output "$($_.Name) - Size: $($_.Length) bytes"
+              }
+              throw "VERIFICATION FAILED! The output file was not found after compilation."
+          }
+          
+          $outputFileInfo = Get-Item $outputFile
+          Write-Output "SUCCESS! Compiled file created at '$outputFile'"
+          Write-Output "File size: $($outputFileInfo.Length) bytes"
+          Write-Output "Created: $($outputFileInfo.CreationTime)"
+                  
+      # الخطوة 5: رفع الملف التنفيذي الناتج
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: Compiled-Program
+          path: Playback.exe
+          
+      # خطوة إضافية: رفع ملفات التشخيص في حال الفشل
+      - name: Upload debug files (if they exist)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Debug-Files
+          path: |
+            compiler_output.txt
+            compiler_error.txt
+            syntax_output.txt
+            syntax_error.txt
+            syntax_test.ahk
+          if-no-files-found: ignore
