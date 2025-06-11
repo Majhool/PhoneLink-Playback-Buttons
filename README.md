@@ -40,15 +40,46 @@
 
 1.  افتح ملف `Playback.ahk` باستخدام أي محرر نصوص.
 2.  ابحث عن الأسطر التي تحتوي على `Media_Play_Pause`, `Media_Next`, `Media_Prev` وقم بتغييرها إلى أسماء الأزرار التي تريدها. (يمكنك إيجاد قائمة بأسماء المفاتيح في [توثيق AutoHotkey](https://www.autohotkey.com/docs/v2/KeyList.htm)).
-3.  بعد حفظ التعديلات، يمكنك:
-      * **تشغيل السكربت مباشرة:** بالنقر المزدوج على ملف `Playback.ahk`.
-      * **إعادة تجميعه (Compile):** لتحويله إلى ملف `.exe` جديد ومستقل باستخدام برنامج `Ahk2Exe`.
-      
-      * **ملاحظة: عند تثبيت AutoHotKeys لا يثبت معه برنامج `Ahk2Exe` يجب تثبيته من خلال برنامج AutoHotkey Dash ثم اختيار compile والموافقة على التنزيل.
-      *  **في حال عدم ظهور AutoHotkey Dash يجب عليك الذهاب لمسار تثبيت التطبيق(افتراضيا):
-* في حال كان التثبيت لكل المستخدمين `C:\Program Files\AutoHotkey\`
-* في حال كان للمستخدم الحالي `%localappdata%\Programs\AutoHotkey`
-      * ** ثم الذهاب لمجلد UX يفترض ان يتواجد ملف بهذا الاسم `install-ahk2exe.ahk` قم بفتحه وتنزيل `Ahk2Exe`.
+<div dir="rtl">
+<ol start="3">
+  <li>
+    بعد حفظ التعديلات، يمكنك:
+    <ul>
+      <li>
+        <strong>تشغيل السكربت مباشرة:</strong> بالنقر المزدوج على ملف
+        <code dir="ltr">Playback.ahk</code>.
+      </li>
+      <li>
+        <strong>إعادة تجميعه (<span dir="ltr">Compile</span>):</strong> لتحويله إلى ملف
+        <code dir="ltr">.exe</code> جديد ومستقل باستخدام برنامج <code dir="ltr">Ahk2Exe</code>.
+      </li>
+      <li>
+        <strong>ملاحظة:</strong> عند تثبيت <span dir="ltr">AutoHotKeys</span> لا يثبت معه برنامج
+        <code dir="ltr">Ahk2Exe</code>، يجب تثبيته من خلال برنامج <span dir="ltr">AutoHotkey Dash</span> ثم اختيار <span dir="ltr">compile</span> والموافقة على التنزيل.
+      </li>
+      <li>
+        في حال عدم ظهور <span dir="ltr">AutoHotkey Dash</span>، يجب عليك الذهاب لمسار تثبيت
+        التطبيق (افتراضياً):
+        <ul>
+          <li>
+            في حال كان التثبيت لكل المستخدمين:
+            <code dir="ltr">C:\Program Files\AutoHotkey\</code>
+          </li>
+          <li>
+            في حال كان للمستخدم الحالي:
+            <code dir="ltr">%localappdata%\Programs\AutoHotkey</code>
+          </li>
+        </ul>
+      </li>
+      <li>
+        ثم الذهاب لمجلد <span dir="ltr">UX</span>، حيث يُفترض أن يتواجد ملف بهذا الاسم
+        <code dir="ltr">install-ahk2exe.ahk</code>. قم بفتحه وتنزيل
+        <code dir="ltr">Ahk2Exe</code>.
+      </li>
+    </ul>
+  </li>
+</ol>
+</div>
 
   
 يتم بناء الإصدارات الرسمية تلقائيًا باستخدام GitHub Actions، ويمكنك الاطلاع على ملفات `.github/workflows/build.yml` و `.github/actions/ahk-compiler/action.yml` لمعرفة كيفية عمل هذه العملية.
